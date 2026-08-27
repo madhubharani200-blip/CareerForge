@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Resume Builder — Craft ATS-optimized resumes with Google XYZ impact bullet generator, AI summary generator, company-specific matching, and PDF export.">
+  <title>AI Resume Builder — CareerForge AI</title>
+  
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/print.css">
+  
+  <!-- html2pdf for direct PDF download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+  <!-- Navigation Shell -->
+  <header id="app-navbar-container"></header>
+
+  <!-- Main Content -->
+  <main class="main-content" style="max-width: 1400px;">
+    
+    <!-- Top Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;" class="no-print">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="if(history.length>1){history.back();}else{window.location.href='dashboard.html';}" style="display:inline-flex; align-items:center; gap:0.4rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Back</span>
+        </button>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <h1 style="font-size: 1.6rem;">AI Resume Builder</h1>
+            <span class="badge badge-primary">ATS Standard Order</span>
+          </div>
+          <p style="font-size: 0.85rem;">Standard Section Hierarchy: Personal Details → Summary → Core Skills → Certifications → Internships → Projects → Work Exp → Achievements → Education</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <button class="btn btn-secondary" id="btn-save-resume">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span>Save Resume</span>
+        </button>
+        <button class="btn btn-outline" id="btn-open-company-matcher">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <span>Match to Company 🏢</span>
+        </button>
+        <button class="btn btn-primary" id="btn-export-pdf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Export PDF</span>
+        </button>
+        <a href="resume-analyzer.html" class="btn btn-ai" id="btn-scan-ats">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>ATS Scanner</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 2-Column Split Builder Layout -->
+    <div class="builder-layout">
+      
+      <!-- LEFT COLUMN: Structured Form with EXACT 9-Section Hierarchy -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;" class="no-print">
+        
+        <!-- Resume Template Selection Card -->
+        <div class="card card-glass" style="border-color: rgba(99, 102, 241, 0.3);">
+          <div class="card-header" style="margin-bottom: 0.75rem;">
+            <div>
+              <h3 class="card-title" style="font-size: 1.05rem;">Choose Professional Resume Template</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Select a curated ATS layout tailored for your role and industry.</p>
+            </div>
+            <span class="badge badge-primary" id="badge-role-recommendation">Tech Recommended</span>
+          </div>
+
+          <div class="template-picker-grid" id="resume-template-picker">
+            <div class="template-card active" data-template="ats-modern">
+              <div class="template-card-header">
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">💻 Modern Tech (ATS 95+)</strong>
+                <span class="template-badge-recommended" id="rec-tag-ats-modern">Recommended</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Optimized for Software, Data, AI & Cloud engineering roles.</p>
+            </div>
+
+            <div class="template-card" data-template="executive">
+              <div class="template-card-header">
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">👔 Executive Leadership</strong>
+                <span class="template-badge-recommended" id="rec-tag-executive" style="display:none;">Recommended</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Tailored for Engineering Managers, Leads & Tech Executives.</p>
+            </div>
+
+            <div class="template-card" data-template="creative-split">
+              <div class="template-card-header">
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">🎨 Creative Split-Column</strong>
+                <span class="template-badge-recommended" id="rec-tag-creative-split" style="display:none;">Recommended</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Modern 2-column sidebar for UI/UX, Design & Product roles.</p>
+            </div>
+
+            <div class="template-card" data-template="student-academic">
+              <div class="template-card-header">
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">🎓 Student & Academic</strong>
+                <span class="template-badge-recommended" id="rec-tag-student-academic" style="display:none;">Recommended</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Emphasizes Education, GPA, hackathons & academic projects.</p>
+            </div>
+
+            <div class="template-card" data-template="minimalist-compact">
+              <div class="template-card-header">
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">⚡ Minimalist Clean (1-Page)</strong>
+                <span class="template-badge-recommended" id="rec-tag-minimalist-compact" style="display:none;">Recommended</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">High-density single page layout with ultra clean typography.</p>
+            </div>
+
+            <div class="template-card" data-template="infographic-modern">
+              <div class="template-card-header">
+                <strong style="font-size: 0.85rem; color: var(--text-primary);">🌟 Visual Professional</strong>
+                <span class="template-badge-recommended" id="rec-tag-infographic-modern" style="display:none;">Recommended</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Cobalt header accents, bold metrics, and structured skills.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document Title & Role Target -->
+        <div class="card card-glass">
+          <div class="grid grid-cols-2">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="res-title">Resume Title / Label</label>
+              <input type="text" class="form-input" id="res-title" value="Software Engineer — General Application">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="res-target-role">Target Role</label>
+              <input type="text" class="form-input" id="res-target-role" value="Full Stack Software Engineer">
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. PERSONAL DETAILS -->
+        <div class="card card-glass">
+          <h3 class="card-title" style="margin-bottom: 1rem;">1. Personal Details</h3>
+          <div class="grid grid-cols-2">
+            <div class="form-group">
+              <label class="form-label" for="res-name">Full Name</label>
+              <input type="text" class="form-input" id="res-name" placeholder="e.g. Jane Doe">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="res-email">Email Address</label>
+              <input type="email" class="form-input" id="res-email" placeholder="e.g. jane@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="res-phone">Contact Number</label>
+              <input type="text" class="form-input" id="res-phone" placeholder="e.g. +1 (555) 019-2834">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="res-address">Address / Location</label>
+              <input type="text" class="form-input" id="res-address" placeholder="e.g. San Francisco, CA">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="res-linkedin">LinkedIn URL</label>
+              <input type="url" class="form-input" id="res-linkedin" placeholder="e.g. https://linkedin.com/in/username">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="res-github">GitHub URL</label>
+              <input type="url" class="form-input" id="res-github" placeholder="e.g. https://github.com/username">
+            </div>
+            <div class="form-group" style="grid-column: span 2; margin-bottom: 0;">
+              <label class="form-label" for="res-portfolio">Portfolio / Website URL</label>
+              <input type="url" class="form-input" id="res-portfolio" placeholder="e.g. https://yourportfolio.dev">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. PROFESSIONAL SUMMARY -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">2. Professional Summary</h3>
+            <button type="button" class="btn btn-ai btn-sm" id="btn-ai-generate-objective">
+              <span>Generate Summary with AI ✨</span>
+            </button>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <textarea class="form-textarea" id="res-summary" rows="3" placeholder="Results-oriented Full Stack Engineer with hands-on experience building web applications..."></textarea>
+          </div>
+        </div>
+
+        <!-- 3. CORE SKILLS (Immediately after Professional Summary) -->
+        <div class="card card-glass">
+          <h3 class="card-title" style="margin-bottom: 0.5rem;">3. Core Skills</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Categorize technical proficiencies, frameworks, tools, and databases:</p>
+          <div class="form-group" style="margin-bottom: 0;">
+            <textarea class="form-textarea" id="res-skills" rows="3" placeholder="Languages & Frameworks: JavaScript (ES6+), TypeScript, React, Node.js, Python, HTML5/CSS3&#10;Cloud & Databases: Cloud Firestore, Firebase, PostgreSQL, MongoDB, Docker&#10;Developer Tools: Git, GitHub Actions, REST APIs, Jest, Postman"></textarea>
+          </div>
+        </div>
+
+        <!-- 4. CERTIFICATIONS -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">4. Certifications</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-cert">+ Add Certification</button>
+          </div>
+          <div id="certifications-container" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Certifications rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 5. INTERNSHIP EXPERIENCE -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">5. Internship Experience</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-internship">+ Add Internship</button>
+          </div>
+          <div id="internships-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Internships rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 6. PROJECTS -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">6. Projects</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-project">+ Add Project</button>
+          </div>
+          <div id="projects-items-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Projects rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 7. WORK EXPERIENCE -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">7. Work Experience</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-work-exp">+ Add Work Role</button>
+          </div>
+          <div id="work-experience-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Work Experience rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 8. ACHIEVEMENTS -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">8. Key Achievements & Honors</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-achievement">+ Add Achievement</button>
+          </div>
+          <div id="achievements-container" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Achievements rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 9. EDUCATION -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">9. Education</h3>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-education">+ Add Education</button>
+          </div>
+          <div id="education-container" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Education rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Real-Time Live ATS Paper Preview (In EXACT 9-Section Order) -->
+      <div style="position: sticky; top: calc(var(--header-height) + 1rem);" class="preview-column">
+        
+        <!-- Formatting & Font Customizer Toolbar -->
+        <div class="card card-glass" style="padding: 0.85rem 1.25rem; margin-bottom: 0.75rem;" class="no-print">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="badge badge-emerald">● Live ATS Preview</span>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Standard ATS Layout (8.5" x 11")</span>
+            </div>
+            <button class="btn btn-sm btn-outline" id="btn-quick-company-match">Target: <strong id="lbl-active-company">All Companies</strong> 🏢</button>
+          </div>
+
+          <!-- Font & Alignment Selectors -->
+          <div style="display: flex; gap: 0.75rem; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.5rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label for="select-resume-font" style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Font:</label>
+              <select class="form-select" id="select-resume-font" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; width: auto;">
+                <option value="'Times New Roman', Times, serif" selected>Times New Roman (Classic ATS Serif)</option>
+                <option value="Arial, Helvetica, sans-serif">Arial (Modern Sans)</option>
+                <option value="Calibri, Candara, Segoe, sans-serif">Calibri (Corporate Standard)</option>
+                <option value="'Inter', -apple-system, sans-serif">Inter (Contemporary Tech)</option>
+                <option value="Georgia, serif">Georgia (Executive Serif)</option>
+                <option value="'Garamond', serif">Garamond (Traditional Serif)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label for="select-resume-align" style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Header Align:</label>
+              <select class="form-select" id="select-resume-align" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; width: auto;">
+                <option value="center" selected>Center-Aligned</option>
+                <option value="left">Left-Aligned</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- The Printable Paper Sheet -->
+        <div id="resume-print-area" class="resume-paper-preview" style="background: #ffffff; color: #111827; padding: 2.25rem 2.5rem; border-radius: var(--radius-sm); box-shadow: var(--shadow-xl); font-family: 'Times New Roman', Times, serif; min-height: 900px; font-size: 10pt; line-height: 1.45;">
+          
+          <!-- 1. PERSONAL DETAILS HEADER -->
+          <div id="paper-header-container" style="text-align: center; border-bottom: 2px solid #111827; padding-bottom: 0.6rem; margin-bottom: 0.85rem;">
+            <h1 style="font-size: 1.65rem; font-weight: 800; color: #111827; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;" id="paper-name">Your Full Name</h1>
+            <p style="font-size: 9pt; color: #374151; margin-top: 0.25rem; line-height: 1.45;" id="paper-contact">
+              email@example.com | +1 (555) 000-0000 | Location | <a href="#" id="link-preview-linkedin" target="_blank" rel="noopener noreferrer" style="color: #1d4ed8; text-decoration: underline; font-weight: 600;">LinkedIn</a> | <a href="#" id="link-preview-github" target="_blank" rel="noopener noreferrer" style="color: #1d4ed8; text-decoration: underline; font-weight: 600;">GitHub</a> | <a href="#" id="link-preview-portfolio" target="_blank" rel="noopener noreferrer" style="color: #1d4ed8; text-decoration: underline; font-weight: 600;">Portfolio</a>
+            </p>
+          </div>
+
+          <!-- 2. PROFESSIONAL SUMMARY -->
+          <div class="resume-section" id="sec-paper-summary" style="margin-bottom: 0.85rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Professional Summary
+            </h2>
+            <p style="color: #374151; font-size: 9pt; margin: 0; line-height: 1.4;" id="paper-summary">
+              Results-oriented Software Engineer with a solid background in full-stack web applications and AI-driven automation...
+            </p>
+          </div>
+
+          <!-- 3. CORE SKILLS -->
+          <div class="resume-section" id="sec-paper-skills" style="margin-bottom: 0.85rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Core Skills
+            </h2>
+            <div style="color: #374151; font-size: 9pt; line-height: 1.45;" id="paper-skills">
+              <strong>Languages & Tools:</strong> JavaScript (ES6+), TypeScript, React, Node.js, Python, HTML5, CSS3, Git
+            </div>
+          </div>
+
+          <!-- 4. CERTIFICATIONS -->
+          <div class="resume-section" id="sec-paper-certs" style="margin-bottom: 0.85rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Certifications
+            </h2>
+            <div id="paper-certs-list" style="font-size: 9pt; color: #374151;">
+              <!-- Rendered by live sync -->
+            </div>
+          </div>
+
+          <!-- 5. INTERNSHIP EXPERIENCE -->
+          <div class="resume-section" id="sec-paper-internships" style="margin-bottom: 0.85rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Internship Experience
+            </h2>
+            <div id="paper-internships-list">
+              <!-- Rendered by live sync -->
+            </div>
+          </div>
+
+          <!-- 6. PROJECTS -->
+          <div class="resume-section" id="sec-paper-projects" style="margin-bottom: 0.85rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Projects
+            </h2>
+            <div id="paper-projects-list">
+              <!-- Rendered by live sync -->
+            </div>
+          </div>
+
+          <!-- 7. WORK EXPERIENCE -->
+          <div class="resume-section" id="sec-paper-work-exp" style="margin-bottom: 0.85rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Work Experience
+            </h2>
+            <div id="paper-work-list">
+              <!-- Rendered by live sync -->
+            </div>
+          </div>
+
+          <!-- 8. ACHIEVEMENTS -->
+          <div class="resume-section" id="sec-paper-achievements" style="margin-bottom: 0.85rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Key Achievements
+            </h2>
+            <div id="paper-achievements-list" style="font-size: 9pt; color: #374151;">
+              <!-- Rendered by live sync -->
+            </div>
+          </div>
+
+          <!-- 9. EDUCATION -->
+          <div class="resume-section" id="sec-paper-education" style="margin-bottom: 0.5rem;">
+            <h2 style="font-size: 10pt; font-weight: 700; color: #111827; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 1px; margin-bottom: 0.35rem; letter-spacing: 0.03em;">
+              Education
+            </h2>
+            <div id="paper-education-list" style="font-size: 9pt; color: #374151;">
+              <!-- Rendered by live sync -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- AI Career Objective Generator Modal -->
+  <div class="modal-backdrop" id="modal-ai-objective">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span class="ai-badge">Claude AI</span>
+          <h3 class="card-title">AI Career Objective Generator</h3>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-obj-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; margin-bottom: 1rem;">
+          Select a tailored career summary based on your target role and strengths:
+        </p>
+        <div id="ai-objective-options" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <!-- Options rendered by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-obj">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPANY SPECIFIC RESUME MATCHING MODAL (Requirement 3) -->
+  <div class="modal-backdrop" id="modal-company-matcher">
+    <div class="modal-container" style="max-width: 760px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span class="badge badge-primary">Target Company Matcher</span>
+          <h3 class="card-title">Match Resume to Target Company</h3>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-company-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto;">
+        <p style="font-size: 0.85rem; margin-bottom: 0.75rem; color: var(--text-secondary);">
+          Select a target company to instantly audit your resume keywords, engineering expectations, and role compatibility:
+        </p>
+
+        <!-- Visual Company Selection Grid -->
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem;" id="company-quick-chips">
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip active" data-company="Google">Google</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Amazon">Amazon (AWS)</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Microsoft">Microsoft</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Meta">Meta</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Apple">Apple</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Netflix">Netflix</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Stripe">Stripe</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Uber">Uber</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="OpenAI">OpenAI</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="TCS">TCS</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Infosys">Infosys</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Wipro">Wipro</button>
+          <button type="button" class="btn btn-sm btn-outline btn-company-chip" data-company="Startup">Fast Startup</button>
+        </div>
+
+        <div class="grid grid-cols-2" style="gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="select-company-preset">Select Company Dropdown</label>
+            <select class="form-select" id="select-company-preset">
+              <option value="Google">Google</option>
+              <option value="Amazon">Amazon (AWS)</option>
+              <option value="Microsoft">Microsoft</option>
+              <option value="Meta">Meta</option>
+              <option value="Apple">Apple</option>
+              <option value="Netflix">Netflix</option>
+              <option value="Stripe">Stripe</option>
+              <option value="Uber">Uber</option>
+              <option value="OpenAI">OpenAI</option>
+              <option value="TCS">Tata Consultancy Services (TCS)</option>
+              <option value="Infosys">Infosys</option>
+              <option value="Wipro">Wipro</option>
+              <option value="Startup">Early-Stage / Fast-Growth Startup</option>
+              <option value="Custom">Other / Custom Company</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="input-custom-company">Or Type Custom Company Name</label>
+            <input type="text" class="form-input" id="input-custom-company" placeholder="e.g. Stripe, OpenAI, Airbnb...">
+          </div>
+        </div>
+
+        <button class="btn btn-ai" id="btn-analyze-company-match" style="width: 100%; margin-bottom: 1.25rem;">
+          <span>Re-Analyze Company Match ✨</span>
+        </button>
+
+        <!-- Company Fit Results Container -->
+        <div id="company-analysis-results" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Mandatory Disclaimer Notice -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem;">
+          ℹ️ <strong>Disclaimer:</strong> AI match recommendations and keyword suggestions are guidance tools to help optimize clarity and formatting.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-close-company-footer">Apply Match & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/pages/resume-builder.js"></script>
+</body>
+</html>

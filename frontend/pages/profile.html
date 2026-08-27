@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Manage your student profile, education, verified skills, target role, and privacy settings.">
+  <title>Student Profile & Skills — CareerForge AI</title>
+  
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+  <!-- Reusable App Navigation Container -->
+  <header id="app-navbar-container"></header>
+
+  <!-- Main Content -->
+  <main class="main-content" style="max-width: 900px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="if(history.length>1){history.back();}else{window.location.href='dashboard.html';}" style="display:inline-flex; align-items:center; gap:0.4rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Back</span>
+        </button>
+        <div>
+          <h1>Student Profile & Dossier</h1>
+          <p>Your profile data powers the AI Resume Builder, Skill Gap Matrix, and Autonomous Agent.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <a href="resume-builder.html" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span>Resume Builder 📝</span>
+        </a>
+        <button class="btn btn-primary" id="btn-save-profile">
+          <span>Save Changes</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="card card-glass" style="margin-bottom: 2rem;">
+      <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+        <!-- Avatar & Photo Upload -->
+        <div style="text-align: center; position: relative;">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Avatar" id="profile-avatar-preview" style="width: 110px; height: 110px; border-radius: var(--radius-full); object-fit: cover; border: 3px solid var(--primary); box-shadow: var(--shadow-md);">
+          <input type="file" id="input-avatar-file" accept="image/*" style="display: none;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-change-avatar" style="margin-top: 0.75rem; width: 100%;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <span>Change Photo</span>
+          </button>
+        </div>
+
+        <!-- Primary Details -->
+        <div style="flex: 1; min-width: 260px;">
+          <div class="grid grid-cols-2" style="gap: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="profile-name">Full Name</label>
+              <input type="text" class="form-input" id="profile-name" placeholder="e.g. Jane Doe">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="profile-email">Email Address</label>
+              <input type="email" class="form-input" id="profile-email" placeholder="e.g. jane@example.com" disabled>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+            <label class="form-label" for="profile-headline">Professional Headline / Bio</label>
+            <input type="text" class="form-input" id="profile-headline" placeholder="Aspiring Full Stack Engineer & Cloud Developer">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target Role & Career Direction -->
+    <div class="card card-glass" style="margin-bottom: 2rem;">
+      <h3 class="card-title" style="margin-bottom: 1rem;">🎯 Target Role & Aspirations</h3>
+      <div class="grid grid-cols-2">
+        <div class="form-group">
+          <label class="form-label" for="profile-target-role">Primary Target Role</label>
+          <input type="text" class="form-input" id="profile-target-role" placeholder="e.g. Full Stack Software Engineer">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-experience-level">Experience Level</label>
+          <select class="form-select" id="profile-experience-level">
+            <option value="Student / Early Career">Student / Early Career (0-1 yrs)</option>
+            <option value="Junior Engineer">Junior Engineer (1-2 yrs)</option>
+            <option value="Career Transitioner">Career Transitioner</option>
+            <option value="Mid-Level">Mid-Level (2-4 yrs)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" for="profile-interests">Interests & Tech Passions</label>
+        <input type="text" class="form-input" id="profile-interests" placeholder="e.g. Web Development, Distributed Systems, Generative AI Agents, Open Source">
+      </div>
+    </div>
+
+    <!-- Education Section -->
+    <div class="card card-glass" style="margin-bottom: 2rem;">
+      <h3 class="card-title" style="margin-bottom: 1rem;">🎓 Education</h3>
+      <div class="grid grid-cols-2">
+        <div class="form-group">
+          <label class="form-label" for="edu-institution">University / Institution</label>
+          <input type="text" class="form-input" id="edu-institution" placeholder="University of Technology">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edu-degree">Degree & Major</label>
+          <input type="text" class="form-input" id="edu-degree" placeholder="B.S. in Computer Science">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="edu-grad-year">Graduation Year</label>
+          <input type="text" class="form-input" id="edu-grad-year" placeholder="2026">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="edu-gpa">GPA (Optional)</label>
+          <input type="text" class="form-input" id="edu-gpa" placeholder="3.8 / 4.0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Skills & Proficiency Tags -->
+    <div class="card card-glass" style="margin-bottom: 2rem;">
+      <div class="card-header">
+        <h3 class="card-title">⚡ Core Skills & Proficiencies</h3>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Add technical & domain skills</span>
+      </div>
+
+      <!-- Add Skill Input Bar -->
+      <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+        <input type="text" class="form-input" id="input-new-skill" placeholder="e.g. TypeScript, React, Docker, Python..." style="flex: 2;">
+        <select class="form-select" id="select-skill-level" style="flex: 1;">
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate" selected>Intermediate</option>
+          <option value="Advanced">Advanced</option>
+          <option value="Expert">Expert</option>
+        </select>
+        <button class="btn btn-secondary" id="btn-add-skill">+ Add Skill</button>
+      </div>
+
+      <!-- Skill Tag Chips Container -->
+      <div id="profile-skills-container" style="display: flex; flex-wrap: wrap; gap: 0.6rem; min-height: 48px;">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Social & Project Links -->
+    <div class="card card-glass" style="margin-bottom: 2rem;">
+      <h3 class="card-title" style="margin-bottom: 1rem;">🔗 Links & Social Profiles</h3>
+      <div class="grid grid-cols-2">
+        <div class="form-group">
+          <label class="form-label" for="link-github">GitHub Profile URL</label>
+          <input type="url" class="form-input" id="link-github" placeholder="https://github.com/username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="link-linkedin">LinkedIn Profile URL</label>
+          <input type="url" class="form-input" id="link-linkedin" placeholder="https://linkedin.com/in/username">
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy & Data Management (GDPR Compliance) -->
+    <div class="card card-glass" style="border: 1px solid rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.03);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h3 style="color: var(--accent-rose); font-size: 1.1rem; margin-bottom: 0.25rem;">Data Privacy & Account Removal</h3>
+          <p style="font-size: 0.85rem; margin: 0;">Permanently delete your account, resumes, portfolios, and all agent run history from Cloud Firestore.</p>
+        </div>
+        <button class="btn btn-danger btn-sm" id="btn-open-delete-data">Delete My Data</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Delete Data Confirmation Modal -->
+  <div class="modal-backdrop" id="modal-delete-confirm">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="card-title" style="color: var(--accent-rose);">⚠️ Confirm Account Data Deletion</h3>
+        <button class="btn btn-secondary btn-icon" id="btn-close-delete-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; line-height: 1.6;">
+          Are you sure you want to permanently delete your account and all associated Firestore subcollections (Resumes, Portfolios, Career Recommendations, and Agent Runs)?
+        </p>
+        <p style="font-size: 0.85rem; color: var(--accent-rose); font-weight: 600; margin-top: 0.75rem;">
+          This action is irreversible.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-delete">Cancel</button>
+        <button class="btn btn-danger" id="btn-confirm-delete-data">Permanently Delete All Data</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/pages/profile.js"></script>
+</body>
+</html>

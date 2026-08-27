@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CareerForge AI Cockpit — Track your career readiness, resume ATS score, portfolio, and agent action items.">
+  <title>Career Cockpit — CareerForge AI</title>
+  
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+  <!-- Reusable App Navigation Container -->
+  <header id="app-navbar-container"></header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <!-- Welcome Header & Top Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="if(history.length>1){history.back();}else{window.location.href='../index.html';}" style="display:inline-flex; align-items:center; gap:0.4rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Back</span>
+        </button>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <h1 style="font-size: 1.85rem;" id="user-greeting">Welcome back! 👋</h1>
+          </div>
+          <p id="user-headline">Targeting: <span id="dash-target-role" style="color: var(--primary-light); font-weight: 600;">Full Stack Software Engineer</span></p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="resume-builder.html" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span>New Resume</span>
+        </a>
+        <a href="career-agent.html" class="btn btn-ai" id="btn-trigger-agent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <span>Run Career Agent</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-4" style="margin-bottom: 2rem;">
+      <div class="card card-glass">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Career Readiness</p>
+            <h2 style="margin-top: 0.4rem; color: var(--primary-light);" id="stat-readiness">78%</h2>
+          </div>
+          <span class="badge badge-primary">+8% vs last run</span>
+        </div>
+        <div class="progress-bar-container" style="margin-top: 0.75rem;">
+          <div class="progress-bar-fill" id="stat-readiness-bar" style="width: 78%;"></div>
+        </div>
+      </div>
+
+      <div class="card card-glass">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">ATS Resume Score</p>
+            <h2 style="margin-top: 0.4rem; color: var(--accent-cyan);" id="stat-ats-score">84 / 100</h2>
+          </div>
+          <span class="badge badge-cyan">Competitive</span>
+        </div>
+        <p style="font-size: 0.75rem; margin-top: 0.75rem; color: var(--text-muted);">Parses cleanly across 95% of ATS</p>
+      </div>
+
+      <div class="card card-glass">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Portfolio Showcase</p>
+            <h2 style="margin-top: 0.4rem; color: var(--accent-emerald);" id="stat-projects-count">3 Projects</h2>
+          </div>
+          <span class="badge badge-emerald">Live & Public</span>
+        </div>
+        <a href="public-portfolio.html" id="link-public-stat" target="_blank" style="font-size: 0.75rem; margin-top: 0.75rem; display: inline-block;">View Public Share Link ↗</a>
+      </div>
+
+      <div class="card card-glass">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Skill Gap Audit</p>
+            <h2 style="margin-top: 0.4rem; color: var(--accent-amber);" id="stat-gaps-count">2 Critical Gaps</h2>
+          </div>
+          <span class="badge badge-amber">Action Needed</span>
+        </div>
+        <p style="font-size: 0.75rem; margin-top: 0.75rem; color: var(--text-muted);">Testing & Cloud Security</p>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Split Layout -->
+    <div class="dashboard-grid">
+      
+      <!-- Left Column: Career Agent Action Center & Resumes -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Flagship Autonomous Career Agent Card -->
+        <div class="card card-glass" style="border: 1px solid rgba(168, 85, 247, 0.3); background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(17,24,39,0.9) 100%);">
+          <div class="card-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="ai-badge">⚡ Autonomous AI Agent</span>
+              <strong style="color: var(--text-primary);">Weekly Focus & Recommended Actions</strong>
+            </div>
+            <a href="career-agent.html" class="btn btn-outline btn-sm">Full Agent Report →</a>
+          </div>
+
+          <div id="agent-delta-summary" style="background: var(--bg-surface-elevated); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.9rem; border-left: 3px solid var(--primary-light);">
+            Loading latest agent evaluation...
+          </div>
+
+          <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--text-primary);">Top 3 Priority Actions This Week:</h4>
+          <div id="agent-actions-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Recent Resumes Section -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span>My AI Resumes</span>
+            </h3>
+            <a href="resume-builder.html" class="btn btn-primary btn-sm">+ Create Resume</a>
+          </div>
+
+          <div id="resumes-list" style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Quick Tools, Target Role Match, Roadmap -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Public Portfolio Card -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title" style="font-size: 1.05rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              <span>Public Portfolio</span>
+            </h3>
+            <span class="badge badge-emerald" id="badge-portfolio-status">Published</span>
+          </div>
+          <p style="font-size: 0.85rem; margin-bottom: 0.75rem;">Share your interactive portfolio with recruiters and hiring teams.</p>
+          <div id="dash-inquiries-box" style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface-elevated); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem; font-size: 0.8rem; border: 1px solid var(--border-subtle);">
+            <span>📬 Recruiter Messages:</span>
+            <span id="dash-inquiries-count" class="badge badge-cyan">0 Inquiries</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="portfolio-builder.html" class="btn btn-secondary btn-sm" style="flex: 1;">Edit & View Inbox</a>
+            <a href="public-portfolio.html" id="btn-view-public-portfolio" target="_blank" class="btn btn-primary btn-sm" style="flex: 1;">View Live ↗</a>
+          </div>
+        </div>
+
+        <!-- Career Path Alignment Card -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title" style="font-size: 1.05rem;">Top Career Matches</h3>
+            <a href="recommendations.html" style="font-size: 0.8rem;">View All →</a>
+          </div>
+          <div id="quick-career-matches" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Quick AI Content Enhancer Widget -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title" style="font-size: 1.05rem;">
+              <span class="ai-badge">Quick Tool</span>
+              <span>AI Content Assistant</span>
+            </h3>
+          </div>
+          <p style="font-size: 0.8rem; margin-bottom: 0.75rem;">Improve any bullet point or bio snippet instantly:</p>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <textarea class="form-textarea" id="dash-ai-input" rows="2" placeholder="e.g. Worked on database and fixed bugs" style="font-size: 0.85rem;"></textarea>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <select class="form-select" id="dash-ai-tone" style="width: auto; padding: 0.4rem 0.6rem; font-size: 0.8rem;">
+              <option value="impactful">Impactful (XYZ)</option>
+              <option value="professional">Professional</option>
+              <option value="technical">Technical</option>
+              <option value="concise">Concise</option>
+            </select>
+            <button class="btn btn-ai btn-sm" id="btn-dash-improve-text">Enhance ✨</button>
+          </div>
+          <div id="dash-ai-output" style="display: none; margin-top: 0.75rem;" class="ai-suggestion-box">
+            <!-- Output -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script type="module" src="../js/pages/dashboard.js"></script>
+</body>
+</html>

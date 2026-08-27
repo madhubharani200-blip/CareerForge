@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the request is from the authenticated owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // User Profile Document
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+
+      // Resumes Subcollection
+      match /resumes/{resumeId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Portfolios Subcollection
+      match /portfolios/{portfolioId} {
+        // Allow public read if the portfolio is published
+        allow read: if isOwner(userId) || resource.data.isPublished == true;
+        allow write: if isOwner(userId);
+      }
+
+      // Career Recommendations Subcollection
+      match /careerRecommendations/{recId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Skill Gap Reports Subcollection
+      match /skillGapReports/{reportId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Learning Roadmaps Subcollection
+      match /learningRoadmaps/{roadmapId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Resume Scans Subcollection
+      match /resumeScans/{scanId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Agent Runs Subcollection (Snapshots & History)
+      match /agentRuns/{runId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Public lookup for vanity username / share slug if enabled
+    match /public_slugs/{slug} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+    }
+  }
+}

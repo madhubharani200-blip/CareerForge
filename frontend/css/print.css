@@ -1,0 +1,50 @@
+/* ==========================================================================
+   PRINT & RESUME PDF EXPORT STYLESHEET
+   ========================================================================== */
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  .navbar, .app-footer, .no-print, .btn, .ai-badge, .toast-container, .modal-backdrop {
+    display: none !important;
+  }
+
+  .main-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .resume-paper-preview {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .resume-paper-preview h1,
+  .resume-paper-preview h2,
+  .resume-paper-preview h3,
+  .resume-paper-preview p,
+  .resume-paper-preview li {
+    color: #111827 !important;
+  }
+
+  .resume-section {
+    page-break-inside: avoid;
+    margin-bottom: 1rem !important;
+  }
+
+  a {
+    color: #111827 !important;
+    text-decoration: none !important;
+  }
+}

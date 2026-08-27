@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Resume Analyzer & ATS Scanner — Audit your resume against specific company benchmarks, keyword checklists, and structure issues.">
+  <title>AI Resume & ATS Scanner — CareerForge AI</title>
+  
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+
+  <!-- PDF.js & Mammoth.js for direct resume parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Navigation Shell -->
+  <header id="app-navbar-container"></header>
+
+  <!-- Main Content -->
+  <main class="main-content" style="max-width: 1200px;">
+    
+    <!-- Top Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="if(history.length>1){history.back();}else{window.location.href='dashboard.html';}" style="display:inline-flex; align-items:center; gap:0.4rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Back</span>
+        </button>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <h1 style="font-size: 1.75rem;">Company & Role ATS Resume Scanner</h1>
+            <span class="badge badge-rose">ATS Algorithm Audit</span>
+          </div>
+          <p style="font-size: 0.85rem;">Upload your resume and specify your target role & company to get an exact ATS audit, strengths, weaknesses, and missing skills.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <a href="resume-builder.html" class="btn btn-secondary">
+          <span>Open Resume Builder →</span>
+        </a>
+        <button class="btn btn-ai" id="btn-re-scan">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Run ATS Scan ✨</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 1 & 2: Resume Source + Target Role & Company Selector -->
+    <div class="card card-glass" style="margin-bottom: 2rem; border-color: rgba(99, 102, 241, 0.35);">
+      <h3 class="card-title" style="margin-bottom: 1rem; color: var(--primary-light);">
+        📋 Step 1 & 2: Provide Your Resume & Career Target (No Defaults)
+      </h3>
+
+      <div class="grid grid-cols-2" style="gap: 1.5rem; margin-bottom: 1.25rem;">
+        
+        <!-- Target Role (User Specified) -->
+        <div>
+          <label class="form-label" for="scan-role-input" style="font-size: 0.85rem; font-weight: 600;">
+            1. Target Job Role: <span style="color: var(--accent-rose); font-size: 0.8rem;">* Required</span>
+          </label>
+          <input type="text" class="form-input" id="scan-role-input" placeholder="e.g. React Developer, Cloud DevOps, Python Data Analyst, QA Engineer..." value="">
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
+            Type your specific goal role to get customized keyword and skill evaluations.
+          </span>
+        </div>
+
+        <!-- Target Company -->
+        <div>
+          <label class="form-label" for="scan-company-select" style="font-size: 0.85rem; font-weight: 600;">
+            2. Target Company / Work Environment: <span style="color: var(--accent-rose); font-size: 0.8rem;">* Required</span>
+          </label>
+          <select class="form-select" id="scan-company-select">
+            <option value="" disabled selected>-- Select Target Company --</option>
+            <option value="Google">Google (Algorithms, Distributed Scale, Latency)</option>
+            <option value="Amazon">Amazon (AWS, High Availability, Customer Obsession)</option>
+            <option value="Microsoft">Microsoft (Azure, TypeScript, Enterprise Scale)</option>
+            <option value="Meta">Meta (React, Frontend Perf, Rapid Velocity)</option>
+            <option value="Apple">Apple (UI Precision, Privacy & Security)</option>
+            <option value="TCS">TCS (Full Stack, Database, SDLC Delivery)</option>
+            <option value="Infosys">Infosys (Core OOP, REST Services, Java/Python)</option>
+            <option value="Wipro">Wipro (Cloud Fundamentals, QA & Testing)</option>
+            <option value="Startup">Early-Stage Tech Startup (Full Stack Velocity)</option>
+            <option value="General">General Tech Industry Benchmark</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Resume Upload / Selection Dropzone -->
+      <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+        <label class="form-label" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">
+          3. Upload Your Resume File or Pick Saved Resume: <span style="color: var(--accent-rose); font-size: 0.8rem;">* Required</span>
+        </label>
+        
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <input type="file" id="scan-resume-file" accept=".pdf,.docx,.txt,.json" style="display: none;">
+          
+          <button type="button" class="btn btn-primary btn-sm" id="btn-upload-scan-resume">
+            <span>📄 Upload Resume (PDF, DOCX, TXT)</span>
+          </button>
+          
+          <div style="flex: 1; min-width: 240px;">
+            <select class="form-select" id="select-saved-resume-scan" style="font-size: 0.85rem;">
+              <option value="">-- Or Select Saved Resume from Profile --</option>
+            </select>
+          </div>
+          
+          <span id="scan-resume-status" style="font-size: 0.8rem; color: var(--text-muted);">
+            No resume uploaded yet
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Score Breakdown Card -->
+    <div class="card card-glass" style="margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+        
+        <!-- Big Overall Score Ring -->
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+          <div class="score-circle" id="ats-score-circle" style="width: 110px; height: 110px; --score: 0;">
+            <span class="score-value" id="ats-overall-val" style="font-size: 1.75rem;">--</span>
+          </div>
+          <div>
+            <span class="badge badge-amber" id="ats-tier-badge" style="margin-bottom: 0.35rem;">Awaiting Input</span>
+            <h2 style="font-size: 1.35rem; color: var(--text-primary);">Overall ATS Compatibility</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;" id="ats-target-company-lbl">
+              Provide your role, company, and resume above, then click "Run ATS Scan".
+            </p>
+          </div>
+        </div>
+
+        <!-- 4 Criteria Bars -->
+        <div style="flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 0.75rem;">
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
+              <span>ATS Parsing & Structure Order</span>
+              <strong style="color: var(--accent-cyan);" id="score-ats-parse">--%</strong>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar-fill" id="bar-ats-parse" style="width: 0%;"></div></div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
+              <span>Quantified XYZ Impact Metrics</span>
+              <strong style="color: var(--primary-light);" id="score-ats-metrics">--%</strong>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar-fill" id="bar-ats-metrics" style="width: 0%;"></div></div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
+              <span>Role & Company Keyword Match</span>
+              <strong style="color: var(--accent-emerald);" id="score-ats-keywords">--%</strong>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar-fill" id="bar-ats-keywords" style="width: 0%;"></div></div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
+              <span>Clarity, Style & Brevity</span>
+              <strong style="color: var(--accent-amber);" id="score-ats-clarity">--%</strong>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar-fill" id="bar-ats-clarity" style="width: 0%;"></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Strengths & Weaknesses Detailed Audit (Requirement) -->
+    <div class="grid grid-cols-2" style="margin-bottom: 2rem;">
+      
+      <!-- Strengths Found in Resume -->
+      <div class="card card-glass" style="border-left: 4px solid var(--accent-emerald);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h3 class="card-title" style="color: var(--accent-emerald);">🏆 Resume Strengths & Winning Points</h3>
+          <span class="badge badge-emerald">Real Resume Assets</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">High-impact elements detected in your uploaded resume:</p>
+        <div id="ats-strengths-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Please upload your resume to extract exact strengths.</p>
+        </div>
+      </div>
+
+      <!-- Critical Weaknesses & Areas to Improve -->
+      <div class="card card-glass" style="border-left: 4px solid var(--accent-rose);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h3 class="card-title" style="color: var(--accent-rose);">⚠️ Critical Weaknesses & Gaps</h3>
+          <span class="badge badge-rose">Specific Gaps</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Issues that could lead to ATS rejection for this target role:</p>
+        <div id="ats-weaknesses-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Please upload your resume to extract exact weaknesses.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Keyword Matching Grid (Requirement 6) -->
+    <div class="grid grid-cols-2" style="margin-bottom: 2rem;">
+      
+      <!-- Matching Keywords -->
+      <div class="card card-glass">
+        <h3 class="card-title" style="margin-bottom: 0.75rem; color: var(--accent-emerald);">
+          ✓ Matching Keywords & Skills Detected
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Keywords in your resume matching this target role:</p>
+        <div id="ats-matching-keywords-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Awaiting resume upload and role scan.</p>
+        </div>
+      </div>
+
+      <!-- Missing Keywords & Skills -->
+      <div class="card card-glass">
+        <h3 class="card-title" style="margin-bottom: 0.75rem; color: var(--accent-rose);">
+          🎯 Missing Target Skills & Priority Keywords
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Incorporate these keywords to improve ATS discovery:</p>
+        <div id="ats-missing-keywords-container" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Awaiting resume upload and role scan.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Structure Issues & Formatting Checklist -->
+    <div class="card card-glass" style="margin-bottom: 2rem;">
+      <h3 class="card-title" style="margin-bottom: 1rem; color: var(--accent-amber);">
+        📋 Resume Structure & Formatting Analysis
+      </h3>
+      <div id="structure-issues-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Awaiting scan to audit document structure.</p>
+      </div>
+    </div>
+
+    <!-- Line-by-Line Section Improvements -->
+    <div class="card card-glass">
+      <div class="card-header">
+        <h3 class="card-title">📝 Concrete Bullet Improvements from Your Actual Resume</h3>
+        <span class="badge badge-primary">Google XYZ Impact Formula</span>
+      </div>
+
+      <div id="line-by-line-container" style="display: flex; flex-direction: column; gap: 1rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Specific bullet rewrites tailored to your actual resume will appear here after scanning.</p>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div style="margin-top: 1.5rem; background: var(--bg-surface-elevated); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-muted); border: 1px solid var(--border-subtle);">
+      ℹ️ <strong>Disclaimer:</strong> ATS scores and keyword matching recommendations provide analytical guidance for document optimization. They do not guarantee job interview callbacks or hiring selection.
+    </div>
+
+  </main>
+
+  <script type="module" src="../js/pages/resume-analyzer.js?v=2.3.0"></script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portfolio Builder — Generate project case studies, About Me stories, choose professional templates, and publish a stunning public portfolio page.">
+  <title>Portfolio Builder — CareerForge AI</title>
+  
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+
+  <!-- PDF & DOCX File Extractors for Resume Upload -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body>
+
+  <!-- Navigation Shell -->
+  <header id="app-navbar-container"></header>
+
+  <!-- Main Content -->
+  <main class="main-content" style="max-width: 1280px;">
+    
+    <!-- Top Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="if(history.length>1){history.back();}else{window.location.href='dashboard.html';}" style="display:inline-flex; align-items:center; gap:0.4rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Back</span>
+        </button>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <h1 style="font-size: 1.75rem;">Portfolio Builder</h1>
+            <span class="badge badge-cyan">Public Showcase</span>
+          </div>
+          <p style="font-size: 0.85rem;">Curate your flagship projects, case studies, skills, and certifications to share with recruiters.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <button class="btn btn-outline" id="btn-open-inquiries-modal" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+          <span>📬</span>
+          <span id="badge-inquiries-count">Inquiries (0)</span>
+        </button>
+        <button class="btn btn-outline" id="btn-open-live-preview">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <span>Live Preview</span>
+        </button>
+        <button class="btn btn-secondary" id="btn-save-portfolio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+          <span>Save Draft</span>
+        </button>
+        <button class="btn btn-primary" id="btn-publish-portfolio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+          <span id="txt-publish-btn">Publish Live</span>
+        </button>
+        <a href="public-portfolio.html" id="btn-preview-public" target="_blank" class="btn btn-outline">
+          <span>View Public Page ↗</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Saved Portfolios Quick Switcher & Manager Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface-elevated); padding: 0.85rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass); margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <span style="font-size: 1.2rem;">📁</span>
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.95rem;">My Saved Portfolios:</strong>
+          <span style="font-size: 0.8rem; color: var(--accent-cyan); margin-left: 0.35rem;" id="portfolio-count-indicator">Loading saved portfolios...</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <select class="form-select" id="quick-switch-portfolio" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; min-width: 240px;">
+          <option value="">-- Open Saved Portfolio --</option>
+        </select>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-quick-load-portfolio" title="Open selected portfolio">
+          <span>Open Portfolio ➔</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. PORTFOLIO CREATION PATHWAYS (2 DISTINCT OPTIONS) -->
+    <div class="creation-options-container">
+      
+      <!-- Option A: Create with Resume -->
+      <div class="creation-option-card option-resume" id="card-option-resume" style="cursor: pointer;">
+        <span class="creation-option-badge badge-cyan">Auto-Generate with AI</span>
+        <div class="creation-option-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; color: var(--text-primary); margin-bottom: 0.35rem;">Create Portfolio with Resume</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; flex-grow: 1;">
+          Upload your resume (PDF, DOCX, TXT, JSON) or select a saved resume. The AI will instantly extract your skills, story, and transform your projects into rich recruiter case studies.
+        </p>
+        
+        <input type="file" id="direct-resume-file-input" accept=".pdf,.docx,.txt,.json" style="display: none;">
+        
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-self: flex-start;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-direct-upload-resume">
+            <span>📄 Upload Resume File (PDF/DOCX/TXT)</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-trigger-resume-import">
+            <span>Import / Paste Resume →</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Option B: Create with AI / Manual -->
+      <div class="creation-option-card option-ai active" id="card-option-ai" style="cursor: pointer;">
+        <span class="creation-option-badge badge-primary">Smart AI</span>
+        <div class="creation-option-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; color: var(--text-primary); margin-bottom: 0.35rem;">Create Portfolio with AI</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; flex-grow: 1;">
+          Enter your details directly and let the AI assistant craft compelling narrative case studies, personal About Me bios, and highlight reels tailored for hiring managers.
+        </p>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-trigger-ai-mode" style="align-self: flex-start;">
+          <span>✨ Customize with AI Assistance →</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 2. PORTFOLIO TEMPLATE SELECTION -->
+    <div class="card card-glass" style="margin-bottom: 2rem; border-color: rgba(99, 102, 241, 0.3);">
+      <div class="card-header" style="margin-bottom: 0.75rem;">
+        <div>
+          <h3 class="card-title" style="font-size: 1.05rem;">Choose Professional Portfolio Template</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Select a modern visual presentation for your public showcase.</p>
+        </div>
+        <span class="badge badge-emerald" id="badge-active-template-label">Active: Modern Developer</span>
+      </div>
+
+      <div class="template-picker-grid" id="portfolio-template-picker">
+        <div class="template-card active" data-template="modern-dev">
+          <div class="template-card-header">
+            <strong style="font-size: 0.85rem; color: var(--text-primary);">💻 Modern Developer</strong>
+            <span class="template-badge-recommended">Popular</span>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Dark cyber glassmorphism, accent glow, code-style tech pills & terminal highlights.</p>
+        </div>
+
+        <div class="template-card" data-template="creative">
+          <div class="template-card-header">
+            <strong style="font-size: 0.85rem; color: var(--text-primary);">🎨 Creative & Visual</strong>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Vibrant gradient accents, modern typography, visual project cards & case study callouts.</p>
+        </div>
+
+        <div class="template-card" data-template="executive">
+          <div class="template-card-header">
+            <strong style="font-size: 0.85rem; color: var(--text-primary);">👔 Executive Minimal</strong>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">High-contrast corporate elegance, clean typography, and leadership timelines.</p>
+        </div>
+
+        <div class="template-card" data-template="academic">
+          <div class="template-card-header">
+            <strong style="font-size: 0.85rem; color: var(--text-primary);">🎓 Student & Early Career</strong>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Highlights education, hackathons, academic honors, and foundational projects up front.</p>
+        </div>
+
+        <div class="template-card" data-template="minimal-dark">
+          <div class="template-card-header">
+            <strong style="font-size: 0.85rem; color: var(--text-primary);">🌌 Minimalist Midnight</strong>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Ultra-clean pure dark mode, monospaced tech accents, and distraction-free cards.</p>
+        </div>
+
+        <div class="template-card" data-template="gradient-aurora">
+          <div class="template-card-header">
+            <strong style="font-size: 0.85rem; color: var(--text-primary);">✨ Aurora Vivid</strong>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Subtle mesh gradient backdrop, frosted glass cards, and dynamic violet-cyan glow.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Public Share Link Alert Banner -->
+    <div class="card card-glass" style="margin-bottom: 2rem; border-color: rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.95rem;">🌐 Your Shareable Public Portfolio Link</strong>
+          <p style="font-size: 0.85rem; margin-top: 0.2rem;" id="portfolio-share-url-text">https://careerforge.ai/pages/public-portfolio.html?u=...</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary btn-sm" id="btn-copy-share-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Builder Sections Layout -->
+    <div class="grid grid-cols-2" style="align-items: start; gap: 2rem;">
+      
+      <!-- LEFT COLUMN: Profile Info, Bio & Links -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- 1. Header & Contact Information -->
+        <div class="card card-glass">
+          <h3 class="card-title" style="margin-bottom: 1rem;">1. Personal & Contact Details</h3>
+          
+          <!-- User Profile Picture Upload & Preview -->
+          <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle);">
+            <div style="position: relative; width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary-light); background: var(--bg-surface-elevated); flex-shrink: 0; box-shadow: var(--shadow-glow);">
+              <img id="port-photo-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=developer" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="flex-grow: 1;">
+              <label class="form-label" style="margin-bottom: 0.35rem; font-weight: 600;">Portfolio Profile Picture</label>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <input type="file" id="input-port-photo" accept="image/*" style="display: none;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-upload-port-photo">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  <span>Upload Picture</span>
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-use-profile-avatar" title="Sync avatar from your saved profile">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <span>Use Profile Photo</span>
+                </button>
+                <input type="url" class="form-input" id="port-photo-url" placeholder="Or paste image URL (https://...)" style="flex-grow: 1; font-size: 0.8rem; padding: 0.4rem 0.65rem;">
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">Supports JPG, PNG, WEBP files or direct image links.</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2">
+            <div class="form-group">
+              <label class="form-label" for="port-name">Full Name</label>
+              <input type="text" class="form-input" id="port-name" placeholder="e.g. Jane Doe">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="port-email">Email Address</label>
+              <input type="email" class="form-input" id="port-email" placeholder="e.g. jane@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="port-phone">Contact Number</label>
+              <input type="text" class="form-input" id="port-phone" placeholder="e.g. +1 (555) 019-2834">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="port-location">Location</label>
+              <input type="text" class="form-input" id="port-location" placeholder="e.g. San Francisco, CA">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="port-linkedin">LinkedIn URL</label>
+              <input type="url" class="form-input" id="port-linkedin" placeholder="e.g. https://linkedin.com/in/username">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="port-github">GitHub URL</label>
+              <input type="url" class="form-input" id="port-github" placeholder="e.g. https://github.com/username">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="port-hero-title">Hero Tagline / Professional Headline</label>
+            <input type="text" class="form-input" id="port-hero-title" placeholder="e.g. Building intuitive, scalable digital experiences with AI & cloud architectures.">
+          </div>
+        </div>
+
+        <!-- 2. AI About Me & Professional Summary -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <h3 class="card-title">2. Professional Summary & Story</h3>
+            <button class="btn btn-ai btn-sm" id="btn-ai-about-me">Generate Bio ✨</button>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="port-about-text">Personal Story & Vision</label>
+            <textarea class="form-textarea" id="port-about-text" rows="5" placeholder="Describe your career passion, problem-solving philosophy, and technical focus..."></textarea>
+          </div>
+        </div>
+
+        <!-- 3. Core Skills -->
+        <div class="card card-glass">
+          <h3 class="card-title" style="margin-bottom: 0.75rem;">3. Core Skills</h3>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="port-skills">Technical Skills (Comma Separated)</label>
+            <textarea class="form-textarea" id="port-skills" rows="3" placeholder="JavaScript, TypeScript, React, Node.js, Python, Firebase, Cloud Firestore, Docker, Git, CI/CD"></textarea>
+          </div>
+        </div>
+
+        <!-- 4. Certifications & Achievements -->
+        <div class="card card-glass">
+          <h3 class="card-title" style="margin-bottom: 1rem;">4. Certifications & Achievements</h3>
+          <div class="form-group">
+            <label class="form-label" for="port-certs">Certifications (1 per line with optional link)</label>
+            <textarea class="form-textarea" id="port-certs" rows="3" placeholder="AWS Certified Cloud Practitioner — Amazon Web Services [https://aws.amazon.com]&#10;Google Cloud Certified Associate Cloud Engineer"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="port-achievements">Key Achievements (1 per line)</label>
+            <textarea class="form-textarea" id="port-achievements" rows="3" placeholder="1st Place Winner — University Hackathon&#10;Dean's Honor List for Academic Excellence"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Projects, Experience & Education -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- 5. Featured Projects & Case Studies -->
+        <div class="card card-glass">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">5. Featured Projects</h3>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Add projects or generate Problem -> Architecture -> Outcome AI case studies.</span>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-add-portfolio-proj">+ Add Project</button>
+          </div>
+
+          <div id="portfolio-projects-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Project Cards rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 6. Internship & Work Experience -->
+        <div class="card card-glass">
+          <h3 class="card-title" style="margin-bottom: 0.75rem;">6. Internship & Work Experience</h3>
+          <div class="form-group" style="margin-bottom: 0;">
+            <textarea class="form-textarea" id="port-experience" rows="4" placeholder="Software Engineering Intern at Tech Corp (May 2025 - Aug 2025)&#10;• Built responsive full-stack features with optimized API response times.&#10;• Collaborated on cloud deployment automation."></textarea>
+          </div>
+        </div>
+
+        <!-- 7. Education -->
+        <div class="card card-glass">
+          <h3 class="card-title" style="margin-bottom: 0.75rem;">7. Education</h3>
+          <div class="form-group" style="margin-bottom: 0;">
+            <textarea class="form-textarea" id="port-education" rows="3" placeholder="B.S. in Computer Science — University of Technology | Graduating 2026"></textarea>
+          </div>
+        </div>
+
+        <!-- 8. Recruiter Highlights & Custom Questions -->
+        <div class="card card-glass" style="border-color: rgba(99, 102, 241, 0.3);">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">🌟 8. Recruiter Highlights & Q&A</h3>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Stand out with engineering values, active learning, and availability.</span>
+            </div>
+            <span class="badge badge-primary">Extra Boost</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label" for="port-philosophy" style="font-size: 0.8rem;">💡 Core Engineering Philosophy / Approach</label>
+            <input type="text" class="form-input" id="port-philosophy" placeholder="e.g. Clean architecture, high-availability microservices, and user-first velocity.">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label" for="port-learning" style="font-size: 0.8rem;">🚀 Currently Learning & Exploring</label>
+            <input type="text" class="form-input" id="port-learning" placeholder="e.g. Distributed Systems, Rust, LLM Fine-Tuning, WebGPU">
+          </div>
+
+          <div class="grid grid-cols-2" style="gap: 0.75rem; margin-bottom: 0.75rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="port-availability" style="font-size: 0.8rem;">📅 Work Availability & Role Type</label>
+              <input type="text" class="form-input" id="port-availability" placeholder="e.g. Open for Full-Time / Remote / Internships (Immediate)">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="port-domains" style="font-size: 0.8rem;">🏢 Target Industries & Domains</label>
+              <input type="text" class="form-input" id="port-domains" placeholder="e.g. AI & Cloud Platforms, FinTech, DevTools, SaaS">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label" for="port-testimonial" style="font-size: 0.8rem;">💬 Testimonial / Mentor Endorsement (Optional)</label>
+            <textarea class="form-textarea" id="port-testimonial" rows="2" placeholder="&quot;Exceptional problem solver who delivered our backend pipeline ahead of schedule.&quot; — Senior Engineer"></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="port-publications" style="font-size: 0.8rem;">📝 Featured Articles, Talks, or Open Source Links</label>
+            <textarea class="form-textarea" id="port-publications" rows="2" placeholder="Medium: Architecting Real-Time Web Apps [https://medium.com/@...]&#10;GitHub: Contributor to open-source UI libraries"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: RESUME IMPORT / AUTO-GENERATE PORTFOLIO
+       ========================================================================= -->
+  <div class="modal-backdrop" id="modal-resume-import">
+    <div class="modal-container" style="max-width: 620px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="card-title">Create Portfolio from Resume</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Upload a resume file, paste resume text, or select a saved resume.</p>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-resume-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Import Method Tabs -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-sm btn-primary tab-import-method" data-tab="tab-upload">Upload File</button>
+          <button type="button" class="btn btn-sm btn-secondary tab-import-method" data-tab="tab-saved">Saved Resumes</button>
+          <button type="button" class="btn btn-sm btn-secondary tab-import-method" data-tab="tab-saved-portfolios">📁 Saved Portfolios</button>
+          <button type="button" class="btn btn-sm btn-secondary tab-import-method" data-tab="tab-paste">Paste Text</button>
+        </div>
+
+        <!-- Tab 1: File Upload -->
+        <div id="tab-upload" class="import-tab-content">
+          <div class="resume-dropzone" id="resume-file-dropzone">
+            <input type="file" id="input-resume-file" accept=".txt,.json,.pdf,.docx" style="display: none;">
+            <div style="color: var(--primary-light); margin-bottom: 0.75rem;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            </div>
+            <strong style="display: block; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.25rem;">Click to browse or drag & drop resume</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Supports TXT, JSON, PDF, and DOCX files</span>
+            <div id="file-upload-status" style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;"></div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Saved Resumes in Account -->
+        <div id="tab-saved" class="import-tab-content" style="display: none;">
+          <label class="form-label">Select from your saved resumes in CareerForge:</label>
+          <select class="form-select" id="select-saved-resume" style="margin-bottom: 1rem;">
+            <option value="">Loading your saved resumes...</option>
+          </select>
+        </div>
+
+        <!-- Tab 3: Saved Portfolios in Account -->
+        <div id="tab-saved-portfolios" class="import-tab-content" style="display: none;">
+          <label class="form-label">Select a previously created & saved portfolio to load:</label>
+          <select class="form-select" id="select-saved-portfolio" style="margin-bottom: 1rem;">
+            <option value="">Loading saved portfolios...</option>
+          </select>
+          <p style="font-size: 0.8rem; color: var(--accent-emerald); margin: 0.5rem 0 0; background: rgba(16, 185, 129, 0.08); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-emerald);">
+            ✓ Loading a saved portfolio restores all your saved details, profile picture, projects, and answers without altering any text.
+          </p>
+        </div>
+
+        <!-- Tab 4: Paste Resume Text -->
+        <div id="tab-paste" class="import-tab-content" style="display: none;">
+          <label class="form-label">Paste raw resume text:</label>
+          <textarea class="form-textarea" id="textarea-resume-paste" rows="8" placeholder="Paste your resume content here (Contact info, Summary, Skills, Experience, Projects, Education)..."></textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-resume-import">Cancel</button>
+        <button class="btn btn-primary" id="btn-execute-resume-import">
+          <span id="btn-execute-import-txt">Import Portfolio ✨</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: LIVE INTERACTIVE PREVIEW
+       ========================================================================= -->
+  <div class="modal-backdrop" id="modal-live-preview">
+    <div class="modal-container" style="max-width: 1050px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h3 class="card-title">Interactive Portfolio Preview</h3>
+          <span class="badge badge-emerald" id="preview-active-theme-tag">Modern Developer</span>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-live-preview">&times;</button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; padding: 2rem; background: var(--bg-main);" id="live-preview-content">
+        <!-- Live Preview Content rendered by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-close-preview-footer">Close Preview</button>
+        <a href="public-portfolio.html" target="_blank" class="btn btn-primary" id="btn-preview-modal-open-tab">Open Full Page ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: RECRUITER INQUIRIES & MESSAGES
+       ========================================================================= -->
+  <div class="modal-backdrop" id="modal-inquiries">
+    <div class="modal-container" style="max-width: 750px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <h3 class="card-title">📬 Recruiter Inquiries & Messages</h3>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-inquiries-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; padding: 1.5rem;" id="inquiries-modal-body">
+        <div id="inquiries-list-container">
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Loading messages from recruiters...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-close-inquiries-footer">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/pages/portfolio-builder.js?v=2.5.0"></script>
+</body>
+</html>
+
