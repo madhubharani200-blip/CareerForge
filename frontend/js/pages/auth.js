@@ -7,6 +7,7 @@ import {
   loginWithEmail,
   loginWithGoogle,
   loginWithGoogleEmail,
+  handleGoogleRedirectResult,
   resetPassword,
   getCurrentUser
 } from "../auth.js";
@@ -34,7 +35,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       showToast("Signed out successfully.", "info");
     }
   } else {
-    // If already logged in, redirect to dashboard
+    // 1. Check if returning from Google Redirect
+    try {
+      const redirectUser = await handleGoogleRedirectResult();
+      if (redirectUser) {
+        showToast(`Signed in as ${redirectUser.displayName}! Welcome.`, "success");
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 200);
+        return;
+      }
+    } catch (e) {}
+
+    // 2. If already logged in, redirect to dashboard
     const user = getCurrentUser();
     if (user) {
       window.location.href = "dashboard.html";
@@ -180,7 +193,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }, 200);
     } catch (error) {
       setButtonLoading(btnGoogleAuth, false);
-      // If popup closed or blocked, seamlessly open Google ID modal
       if (inputEmail.value) {
         inputGoogleEmail.value = inputEmail.value;
       }
@@ -206,7 +218,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       setButtonLoading(btnSubmitGoogleDirect, true);
       try {
         const res = await loginWithGoogleEmail(gEmail, gName);
-        showToast(`Signed in as ${res.user.displayName}! Welcome.`, "success");
+        showToast(`Signed in with Google as ${res.user.displayName}! Welcome.`, "success");
         closeModal(modalGoogle);
         setTimeout(() => {
           window.location.href = "dashboard.html";

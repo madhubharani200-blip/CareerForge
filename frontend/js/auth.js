@@ -1,8 +1,8 @@
 /**
- * AUTHENTICATION MODULE (Firebase Auth + Resilient Account Registry)
+ * AUTHENTICATION MODULE (Firebase Auth + Google Account Firestore Storage)
  * 
- * Provides instant, zero-error sign in and account creation with real user credentials,
- * synchronized with Firebase Auth & Firestore when available.
+ * Provides instant sign in and account creation with real user credentials,
+ * synchronized with Firebase Auth & Firestore.
  */
 
 import { auth, db } from "./firebase-config.js";
@@ -10,6 +10,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   sendPasswordResetEmail,
@@ -47,6 +49,7 @@ function saveAccountToRegistry(userObj, password = "") {
       displayName: userObj.displayName || userObj.email.split("@")[0],
       photoURL: userObj.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userObj.displayName || userObj.email)}&backgroundColor=6366f1,3b82f6,06b6d4`,
       password: password || registry[emailKey]?.password || "",
+      authProvider: userObj.authProvider || "password",
       updatedAt: new Date().toISOString()
     };
     localStorage.setItem(ACCOUNTS_REGISTRY_KEY, JSON.stringify(registry));
@@ -59,7 +62,7 @@ function saveAccountToRegistry(userObj, password = "") {
 // Background sync from Firebase Auth if available
 if (auth) {
   try {
-    onAuthStateChanged(auth, (firebaseUser) => {
+    onAuthStateChanged(auth, async (firebaseUser) => {
       if (sessionStorage.getItem("cf_logged_out") === "true") {
         return;
       }
@@ -69,13 +72,45 @@ if (auth) {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: name,
-          photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`
+          photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+          authProvider: firebaseUser.providerData?.[0]?.providerId || "google.com"
         };
         localStorage.setItem(SESSION_USER_KEY, JSON.stringify(u));
         saveAccountToRegistry(u);
+        ensureUserProfileDoc(firebaseUser, u).catch(() => {});
       }
     });
   } catch (e) {}
+}
+
+/**
+ * Handle redirect result from Google Redirect Sign-In if present
+ */
+export async function handleGoogleRedirectResult() {
+  if (!auth) return null;
+  try {
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      const user = result.user;
+      const name = user.displayName || user.email?.split("@")[0] || "User";
+      const sessionUser = {
+        uid: user.uid,
+        email: user.email,
+        displayName: name,
+        photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+        authProvider: "google.com",
+        isNewUser: false
+      };
+      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
+      localStorage.setItem("cf_is_new_user", "false");
+      saveAccountToRegistry(sessionUser);
+      await ensureUserProfileDoc(user, sessionUser);
+      return sessionUser;
+    }
+  } catch (e) {
+    console.warn("[Auth] Google redirect check notice:", e);
+  }
+  return null;
 }
 
 /**
@@ -104,7 +139,8 @@ export function getCurrentUser() {
       uid: auth.currentUser.uid,
       email: auth.currentUser.email,
       displayName: name,
-      photoURL: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`
+      photoURL: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+      authProvider: auth.currentUser.providerData?.[0]?.providerId || "google.com"
     };
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(u));
     return u;
@@ -165,17 +201,26 @@ export async function updateUserSession(updatedData) {
 }
 
 /**
- * Ensure `users/{uid}` profile document exists in Firestore and Local Cache
+ * Ensure `users/{uid}` profile document is stored in Firebase Firestore and Local Cache
  */
 export async function ensureUserProfileDoc(user, additionalData = {}) {
   if (!user?.uid) return;
 
   const name = user.displayName || additionalData.displayName || user.email?.split("@")[0] || "User";
 
-  const minimalProfile = {
+  const profileData = {
+    uid: user.uid,
     displayName: name,
     email: user.email || "",
-    photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+    photoURL: user.photoURL || additionalData.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+    authProvider: additionalData.authProvider || "google.com",
+    headline: additionalData.headline || "Aspiring Professional",
+    targetRole: additionalData.targetRole || "Full Stack Software Engineer",
+    experienceLevel: additionalData.experienceLevel || "Entry-Level",
+    interests: additionalData.interests || "",
+    skills: additionalData.skills || [],
+    education: additionalData.education || [],
+    links: additionalData.links || { github: "", linkedin: "" },
     ...additionalData,
     updatedAt: new Date().toISOString()
   };
@@ -184,14 +229,17 @@ export async function ensureUserProfileDoc(user, additionalData = {}) {
   const localProfileKey = `user_profile_${user.uid}`;
   const existing = localStorage.getItem(localProfileKey);
   if (!existing) {
-    localStorage.setItem(localProfileKey, JSON.stringify(minimalProfile));
+    localStorage.setItem(localProfileKey, JSON.stringify(profileData));
   }
 
-  // Sync to Firestore in background
+  // Store in Firebase Firestore collection `users`
   try {
     if (db) {
       const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, { ...minimalProfile, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(userDocRef, {
+        ...profileData,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
     }
   } catch (err) {
     console.warn("[Auth] Firestore doc creation notice:", err.message);
@@ -214,11 +262,10 @@ export async function registerWithEmail(email, password, displayName) {
     throw new Error("Password must be at least 6 characters long.");
   }
 
-  // Create clean user model
   let uid = `user_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
   let photoURL = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=6366f1,3b82f6,06b6d4`;
 
-  // Try Firebase Auth in background
+  // Try Firebase Auth
   if (auth) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
@@ -242,16 +289,16 @@ export async function registerWithEmail(email, password, displayName) {
     email: cleanEmail,
     displayName: cleanName,
     photoURL,
+    authProvider: "password",
     isNewUser: true
   };
 
-  // Persist session & registry
   localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
   localStorage.setItem("cf_is_new_user", "true");
   saveAccountToRegistry(sessionUser, password);
 
-  // Initialize clean profile
   const cleanProfile = {
+    uid,
     displayName: cleanName,
     email: cleanEmail,
     photoURL,
@@ -266,7 +313,6 @@ export async function registerWithEmail(email, password, displayName) {
   localStorage.setItem(`user_profile_${uid}`, JSON.stringify(cleanProfile));
   localStorage.setItem("cf_user_profile", JSON.stringify(cleanProfile));
 
-  // Sync to Firestore in background
   ensureUserProfileDoc(sessionUser, cleanProfile).catch(() => {});
 
   return { success: true, user: sessionUser };
@@ -297,6 +343,7 @@ export async function loginWithEmail(email, password) {
           email: fbUser.email,
           displayName: name,
           photoURL: fbUser.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+          authProvider: "password",
           isNewUser: false
         };
       }
@@ -327,6 +374,7 @@ export async function loginWithEmail(email, password) {
         email: existing.email,
         displayName: existing.displayName || cleanEmail.split("@")[0],
         photoURL: existing.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(existing.displayName || cleanEmail)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+        authProvider: existing.authProvider || "password",
         isNewUser: false
       };
     } else {
@@ -338,6 +386,7 @@ export async function loginWithEmail(email, password) {
         email: cleanEmail,
         displayName: formattedName,
         photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formattedName)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+        authProvider: "password",
         isNewUser: false
       };
       saveAccountToRegistry(sessionUser, password);
@@ -356,7 +405,7 @@ export async function loginWithEmail(email, password) {
 }
 
 /**
- * Sign In with original Google Account (Direct / Fast)
+ * Sign In with original Google Account (Direct / Fast + Stores in Firebase Firestore)
  */
 export async function loginWithGoogleEmail(email, displayName) {
   sessionStorage.removeItem("cf_logged_out");
@@ -376,6 +425,7 @@ export async function loginWithGoogleEmail(email, displayName) {
     email: cleanEmail,
     displayName: cleanName,
     photoURL,
+    authProvider: "google.com",
     isNewUser: false
   };
 
@@ -384,9 +434,11 @@ export async function loginWithGoogleEmail(email, displayName) {
   saveAccountToRegistry(sessionUser);
 
   const cleanProfile = {
+    uid,
     displayName: cleanName,
     email: cleanEmail,
     photoURL,
+    authProvider: "google.com",
     headline: "Aspiring Professional",
     targetRole: "Full Stack Software Engineer",
     experienceLevel: "Entry-Level",
@@ -402,13 +454,14 @@ export async function loginWithGoogleEmail(email, displayName) {
   }
   localStorage.setItem("cf_user_profile", JSON.stringify(cleanProfile));
 
-  ensureUserProfileDoc(sessionUser, cleanProfile).catch(() => {});
+  // Store in Firebase Firestore collection `users`
+  await ensureUserProfileDoc(sessionUser, cleanProfile);
 
   return { success: true, user: sessionUser };
 }
 
 /**
- * Google Sign-In Popup
+ * Google Sign-In (Firebase OAuth Popup + Stores in Firebase Firestore)
  */
 export async function loginWithGoogle() {
   sessionStorage.removeItem("cf_logged_out");
@@ -418,7 +471,9 @@ export async function loginWithGoogle() {
   }
 
   const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
+  provider.addScope("profile");
+  provider.addScope("email");
+  provider.setCustomParameters({ prompt: "select_account" });
 
   try {
     const result = await signInWithPopup(auth, provider);
@@ -430,6 +485,7 @@ export async function loginWithGoogle() {
       email: user.email,
       displayName: name,
       photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
+      authProvider: "google.com",
       isNewUser: false
     };
 
@@ -437,7 +493,15 @@ export async function loginWithGoogle() {
     localStorage.setItem("cf_is_new_user", "false");
     saveAccountToRegistry(sessionUser);
 
-    ensureUserProfileDoc(user).catch(() => {});
+    // Store in Firebase Firestore
+    await ensureUserProfileDoc(user, {
+      uid: user.uid,
+      displayName: name,
+      email: user.email,
+      photoURL: sessionUser.photoURL,
+      authProvider: "google.com"
+    });
+
     return { success: true, user: sessionUser };
   } catch (error) {
     const code = (error.code || "");
