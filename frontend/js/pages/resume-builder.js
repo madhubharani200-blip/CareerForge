@@ -191,6 +191,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (resumePrintArea) {
       resumePrintArea.className = `resume-paper-preview resume-template-${templateName}`;
     }
+    if (paperName) {
+      if (templateName === "creative-split") {
+        paperName.style.color = "#ffffff";
+      } else {
+        paperName.style.color = "#111827";
+      }
+    }
     syncPaperPreview();
   }
 
@@ -1080,11 +1087,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   btnExportPdf.addEventListener("click", () => {
     const element = document.getElementById("resume-print-area");
     const exportName = (resName.value.trim() || user.displayName || "My").replace(/\s+/g, "_");
+
+    // Ensure candidate name is explicitly colored and visible during canvas snapshot
+    if (paperName) {
+      if (activeTemplate === "creative-split") {
+        paperName.style.color = "#ffffff";
+      } else {
+        paperName.style.color = "#111827";
+      }
+    }
+
     const opt = {
       margin: [0.3, 0.3, 0.3, 0.3],
       filename: `${exportName}_Resume.pdf`,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
     };
 
@@ -1092,6 +1109,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       showToast("Exporting PDF resume...", "info");
       window.html2pdf().set(opt).from(element).save().then(() => {
         showToast("PDF Resume exported successfully!", "success");
+        if (paperName && activeTemplate === "creative-split") {
+          paperName.style.color = "#ffffff";
+        }
       });
     } else {
       window.print();

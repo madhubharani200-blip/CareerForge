@@ -11,12 +11,35 @@ import {
 } from "../auth.js";
 import { openModal, closeModal, showToast, setButtonLoading } from "../ui-utils.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  // If already logged in, redirect to dashboard
-  const user = getCurrentUser();
-  if (user) {
-    window.location.href = "dashboard.html";
-    return;
+document.addEventListener("DOMContentLoaded", async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isLogout = urlParams.get("logout") === "true" || sessionStorage.getItem("cf_logged_out") === "true";
+
+  if (isLogout) {
+    sessionStorage.setItem("cf_logged_out", "true");
+    localStorage.removeItem("career_ai_session_user");
+    localStorage.removeItem("career_ai_demo_user");
+    localStorage.removeItem("cf_user_profile");
+    localStorage.removeItem("cf_is_new_user");
+    try {
+      if (window.indexedDB) {
+        indexedDB.deleteDatabase("firebaseLocalStorageDb");
+      }
+    } catch (e) {}
+
+    if (urlParams.get("logout") === "true") {
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {}
+      showToast("Signed out successfully.", "info");
+    }
+  } else {
+    // If already logged in, redirect to dashboard
+    const user = getCurrentUser();
+    if (user) {
+      window.location.href = "dashboard.html";
+      return;
+    }
   }
 
   // DOM Elements

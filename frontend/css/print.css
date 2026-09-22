@@ -47,4 +47,33 @@
     color: #111827 !important;
     text-decoration: none !important;
   }
+
+  /* Creative Split Template Print/PDF Overrides */
+  .resume-template-creative-split #paper-header-container {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    margin: 0 0 1rem 0 !important;
+    padding: 1.25rem 1.5rem !important;
+    border-radius: 4px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .resume-template-creative-split #paper-header-container h1,
+  .resume-template-creative-split #paper-name {
+    color: #ffffff !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .resume-template-creative-split #paper-header-container p,
+  .resume-template-creative-split #paper-header-container a,
+  .resume-template-creative-split #paper-header-container span {
+    color: #cbd5e1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

@@ -600,22 +600,34 @@
   font-family: 'Inter', -apple-system, sans-serif !important;
 }
 .resume-template-creative-split #paper-header-container {
-  background: #0f172a;
-  color: #f8fafc;
+  background: #0f172a !important;
+  color: #f8fafc !important;
   padding: 1.25rem 1.5rem !important;
   border-radius: 4px;
-  margin: -1.5rem -1.5rem 1rem -1.5rem !important;
+  margin: 0 0 1.25rem 0 !important;
   text-align: left !important;
   border-bottom: none !important;
+  box-sizing: border-box !important;
 }
-.resume-template-creative-split #paper-header-container h1 {
+.resume-template-creative-split #paper-header-container h1,
+.resume-template-creative-split #paper-name {
   color: #ffffff !important;
-  font-size: 1.7rem !important;
+  font-size: 1.75rem !important;
   font-weight: 800 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
 }
 .resume-template-creative-split #paper-header-container p,
-.resume-template-creative-split #paper-header-container a {
+.resume-template-creative-split #paper-header-container a,
+.resume-template-creative-split #paper-header-container span {
   color: #94a3b8 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
 }
 .resume-template-creative-split .resume-split-grid {
   display: grid;

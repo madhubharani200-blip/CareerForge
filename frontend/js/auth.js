@@ -22,6 +22,9 @@ const DEMO_USER_KEY = "career_ai_demo_user";
 if (auth) {
   try {
     onAuthStateChanged(auth, (firebaseUser) => {
+      if (sessionStorage.getItem("cf_logged_out") === "true") {
+        return;
+      }
       if (firebaseUser) {
         const u = {
           uid: firebaseUser.uid,
@@ -39,6 +42,10 @@ if (auth) {
  * Get current authenticated user (Synchronous & resilient against async load ticks)
  */
 export function getCurrentUser() {
+  if (sessionStorage.getItem("cf_logged_out") === "true") {
+    return null;
+  }
+
   if (auth?.currentUser) {
     const u = {
       uid: auth.currentUser.uid,
@@ -195,6 +202,7 @@ function isPlaceholderOrNetworkError(error) {
  * Register new user with Email & Password
  */
 export async function registerWithEmail(email, password, displayName) {
+  sessionStorage.removeItem("cf_logged_out");
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -238,6 +246,7 @@ export async function registerWithEmail(email, password, displayName) {
  * Login with Email & Password
  */
 export async function loginWithEmail(email, password) {
+  sessionStorage.removeItem("cf_logged_out");
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -277,6 +286,7 @@ export async function loginWithEmail(email, password) {
  * Google Sign-In Popup
  */
 export async function loginWithGoogle() {
+  sessionStorage.removeItem("cf_logged_out");
   try {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
@@ -330,8 +340,12 @@ export async function resetPassword(email) {
  * Sign Out
  */
 export async function logOut() {
+  sessionStorage.setItem("cf_logged_out", "true");
   localStorage.removeItem(SESSION_USER_KEY);
   localStorage.removeItem(DEMO_USER_KEY);
+  localStorage.removeItem("cf_user_profile");
+  localStorage.removeItem("cf_is_new_user");
+
   if (auth) {
     try {
       await signOut(auth);
@@ -339,15 +353,32 @@ export async function logOut() {
       console.warn("[Auth] Firebase signout notice:", err.message);
     }
   }
-  window.location.href = "auth.html";
+
+  try {
+    if (window.indexedDB) {
+      indexedDB.deleteDatabase("firebaseLocalStorageDb");
+    }
+  } catch (e) {}
+
+  const isPagesDir = window.location.pathname.includes("/pages/");
+  const target = isPagesDir ? "auth.html?logout=true" : "pages/auth.html?logout=true";
+  window.location.replace(target);
 }
 
 /**
  * Listen for Auth state changes
  */
 export function onAuthChanged(callback) {
+  if (sessionStorage.getItem("cf_logged_out") === "true") {
+    callback(null);
+    return;
+  }
   if (auth) {
     onAuthStateChanged(auth, (user) => {
+      if (sessionStorage.getItem("cf_logged_out") === "true") {
+        callback(null);
+        return;
+      }
       if (user) {
         callback(user);
       } else {
