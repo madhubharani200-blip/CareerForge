@@ -68,7 +68,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   let isSignUp = false;
 
   // Check URL params for mode=signup
-  const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("mode") === "signup") {
     setMode(true);
   }

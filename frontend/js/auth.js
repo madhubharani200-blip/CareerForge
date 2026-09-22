@@ -161,11 +161,7 @@ export async function ensureUserProfileDoc(user, additionalData = {}) {
   try {
     if (db) {
       const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        await setDoc(userDocRef, defaultProfile);
-      }
+      await setDoc(userDocRef, defaultProfile, { merge: true });
     }
   } catch (err) {
     console.warn("[Auth] Firestore doc creation bypassed or offline:", err.message);
@@ -190,6 +186,9 @@ function isPlaceholderOrNetworkError(error) {
     code.includes("app-deleted") ||
     code.includes("configuration-not-found") ||
     code.includes("operation-not-allowed") ||
+    code.includes("unauthorized-domain") ||
+    code.includes("popup-blocked") ||
+    msg.includes("unauthorized-domain") ||
     msg.includes("configuration-not-found") ||
     msg.includes("operation-not-allowed") ||
     msg.includes("api-key-not-valid") ||
