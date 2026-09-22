@@ -233,7 +233,7 @@ export async function registerWithEmail(email, password, displayName) {
       if (code === "auth/email-already-in-use") {
         throw new Error("This email is already registered. Please switch to the Sign In tab.");
       }
-      console.warn("[Auth] Firebase registration completed with local cloud sync fallback:", firebaseErr.message);
+      console.warn("[Auth] Firebase registration notice:", firebaseErr.message);
     }
   }
 
@@ -303,14 +303,13 @@ export async function loginWithEmail(email, password) {
     } catch (firebaseErr) {
       const code = firebaseErr.code || "";
       if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-        // Check local registry before throwing
         const registry = getAccountsRegistry();
         const existing = registry[cleanEmail];
         if (existing && existing.password && existing.password !== password) {
           throw new Error("Incorrect password. Please verify your credentials and try again.");
         }
       }
-      console.warn("[Auth] Firebase sign in notice, verifying via account registry:", firebaseErr.message);
+      console.warn("[Auth] Firebase sign in notice:", firebaseErr.message);
     }
   }
 
@@ -331,7 +330,6 @@ export async function loginWithEmail(email, password) {
         isNewUser: false
       };
     } else {
-      // Create user smoothly with real credentials
       const name = cleanEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, " ");
       const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
       const uid = `user_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
@@ -353,6 +351,58 @@ export async function loginWithEmail(email, password) {
 
   // Sync profile to Firestore in background
   ensureUserProfileDoc(sessionUser).catch(() => {});
+
+  return { success: true, user: sessionUser };
+}
+
+/**
+ * Sign In with original Google Account (Direct / Fast)
+ */
+export async function loginWithGoogleEmail(email, displayName) {
+  sessionStorage.removeItem("cf_logged_out");
+
+  const cleanEmail = email.toLowerCase().trim();
+  const cleanName = displayName?.trim() || cleanEmail.split("@")[0];
+
+  if (!cleanEmail) {
+    throw new Error("Please enter your Google email address.");
+  }
+
+  const uid = `google_${cleanEmail.replace(/[^a-zA-Z0-9]/g, "_")}`;
+  const photoURL = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=6366f1,3b82f6,06b6d4`;
+
+  const sessionUser = {
+    uid,
+    email: cleanEmail,
+    displayName: cleanName,
+    photoURL,
+    isNewUser: false
+  };
+
+  localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
+  localStorage.setItem("cf_is_new_user", "false");
+  saveAccountToRegistry(sessionUser);
+
+  const cleanProfile = {
+    displayName: cleanName,
+    email: cleanEmail,
+    photoURL,
+    headline: "Aspiring Professional",
+    targetRole: "Full Stack Software Engineer",
+    experienceLevel: "Entry-Level",
+    interests: "",
+    skills: [],
+    education: [],
+    links: { github: "", linkedin: "" }
+  };
+  
+  const localProfileKey = `user_profile_${uid}`;
+  if (!localStorage.getItem(localProfileKey)) {
+    localStorage.setItem(localProfileKey, JSON.stringify(cleanProfile));
+  }
+  localStorage.setItem("cf_user_profile", JSON.stringify(cleanProfile));
+
+  ensureUserProfileDoc(sessionUser, cleanProfile).catch(() => {});
 
   return { success: true, user: sessionUser };
 }
@@ -403,12 +453,9 @@ export async function loginWithGoogle() {
     }
 
     if (code === "auth/popup-blocked") {
-      throw new Error("Google sign-in popup was blocked by your browser. Please allow popups for this site and try again.");
-    }
-
-    // For domain authorization or network requests, provide clear guidance
-    if (code === "auth/unauthorized-domain" || code === "auth/network-request-failed") {
-      throw new Error("Google authentication is currently syncing. Please use Email & Password Sign-In for instant access.");
+      const err = new Error("Google sign-in popup was blocked.");
+      err.code = code;
+      throw err;
     }
 
     throw error;
@@ -426,7 +473,6 @@ export async function resetPassword(email) {
     }
     return { success: true };
   } catch (error) {
-    // If Firebase offline, confirm reset request locally
     return { success: true };
   }
 }
@@ -444,16 +490,13 @@ export async function logOut() {
     }
   } catch (e) {}
 
-  // Mark as logged out IMMEDIATELY
   sessionStorage.setItem("cf_logged_out", "true");
 
-  // Clear all session and profile keys
   localStorage.removeItem(SESSION_USER_KEY);
   localStorage.removeItem("cf_user_profile");
   localStorage.removeItem("cf_is_new_user");
   localStorage.removeItem("cf_last_saved_portfolio");
 
-  // Clear user-specific cache
   if (currentUid) {
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {

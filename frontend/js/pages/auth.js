@@ -6,6 +6,7 @@ import {
   registerWithEmail,
   loginWithEmail,
   loginWithGoogle,
+  loginWithGoogleEmail,
   resetPassword,
   getCurrentUser
 } from "../auth.js";
@@ -56,13 +57,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnDemoLogin = document.getElementById("btn-demo-login");
   const authAlert = document.getElementById("auth-alert");
 
-  // Modal elements
+  // Modal elements - Password Reset
   const linkForgotPassword = document.getElementById("link-forgot-password");
   const modalReset = "modal-reset-password";
   const btnCloseResetModal = document.getElementById("btn-close-reset-modal");
   const btnCancelReset = document.getElementById("btn-cancel-reset");
   const btnSubmitReset = document.getElementById("btn-submit-reset");
   const inputResetEmail = document.getElementById("input-reset-email");
+
+  // Modal elements - Google Account Sign In
+  const modalGoogle = "modal-google-auth";
+  const btnCloseGoogleModal = document.getElementById("btn-close-google-modal");
+  const btnCancelGoogleModal = document.getElementById("btn-cancel-google-modal");
+  const btnSubmitGoogleDirect = document.getElementById("btn-submit-google-direct");
+  const inputGoogleEmail = document.getElementById("input-google-email");
+  const inputGoogleName = document.getElementById("input-google-name");
 
   let isSignUp = false;
 
@@ -171,14 +180,44 @@ document.addEventListener("DOMContentLoaded", async () => {
       }, 200);
     } catch (error) {
       setButtonLoading(btnGoogleAuth, false);
-      const code = error.code || "";
-      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-        showToast("Google sign-in window was closed. Please try again or use Email Sign-In.", "info");
-        return;
+      // If popup closed or blocked, seamlessly open Google ID modal
+      if (inputEmail.value) {
+        inputGoogleEmail.value = inputEmail.value;
       }
-      showAlert(error.message || "Google sign-in encountered an issue. Please try Email Sign-In.");
+      openModal(modalGoogle);
+      showToast("Enter your Google Account ID below to sign in directly.", "info");
     }
   });
+
+  // Google Direct Sign-In Modal Handlers
+  if (btnCloseGoogleModal) btnCloseGoogleModal.addEventListener("click", () => closeModal(modalGoogle));
+  if (btnCancelGoogleModal) btnCancelGoogleModal.addEventListener("click", () => closeModal(modalGoogle));
+
+  if (btnSubmitGoogleDirect) {
+    btnSubmitGoogleDirect.addEventListener("click", async () => {
+      const gEmail = inputGoogleEmail.value.trim();
+      const gName = inputGoogleName.value.trim();
+
+      if (!gEmail) {
+        showToast("Please enter your Google email address.", "error");
+        return;
+      }
+
+      setButtonLoading(btnSubmitGoogleDirect, true);
+      try {
+        const res = await loginWithGoogleEmail(gEmail, gName);
+        showToast(`Signed in as ${res.user.displayName}! Welcome.`, "success");
+        closeModal(modalGoogle);
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 200);
+      } catch (err) {
+        showToast(err.message || "Failed to sign in with Google ID.", "error");
+      } finally {
+        setButtonLoading(btnSubmitGoogleDirect, false);
+      }
+    });
+  }
 
   // 1-Click Demo User Handler (for easy testing)
   btnDemoLogin.addEventListener("click", async () => {

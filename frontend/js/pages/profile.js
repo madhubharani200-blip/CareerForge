@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnChangeAvatar = document.getElementById("btn-change-avatar");
   const profileName = document.getElementById("profile-name");
   const profileEmail = document.getElementById("profile-email");
+  const profileUid = document.getElementById("profile-uid");
   const profileHeadline = document.getElementById("profile-headline");
   const profileTargetRole = document.getElementById("profile-target-role");
   const profileExpLevel = document.getElementById("profile-experience-level");
@@ -64,6 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadProfile() {
     profileEmail.value = user.email || "";
     profileName.value = user.displayName || "";
+    if (profileUid) profileUid.value = user.uid || "Verified Account";
     avatarPreview.src = currentAvatarUrl;
 
     // Load from local storage cache first
