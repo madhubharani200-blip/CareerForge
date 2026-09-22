@@ -57,9 +57,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btnViewPublicPortfolio) btnViewPublicPortfolio.href = publicUrl;
   if (linkPublicStat) linkPublicStat.href = publicUrl;
 
-  // 1. Load Latest Agent Run
+  // Load all dashboard sections in parallel for instant responsiveness
+  const [agentRunRes, resumesRes, portfoliosRes, inquiriesRes, recsRes] = await Promise.allSettled([
+    getLatestAgentRun(user.uid),
+    getUserResumes(user.uid),
+    getUserPortfolios(user.uid),
+    getCandidateInquiries(user.uid),
+    getCareerRecommendations({ uid: user.uid })
+  ]);
+
+  // 1. Render Latest Agent Run
   try {
-    const latestRun = await getLatestAgentRun(user.uid);
+    const latestRun = agentRunRes.status === "fulfilled" ? agentRunRes.value : null;
     if (latestRun) {
       targetRoleEl.textContent = latestRun.targetRole || "Full Stack Software Engineer";
       
@@ -102,11 +111,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.warn("Could not load agent run:", err);
   }
 
-  // 2. Load Resumes
+  // 2. Render Resumes
   try {
-    let resumes = await getUserResumes(user.uid);
+    let resumes = resumesRes.status === "fulfilled" ? resumesRes.value : null;
     if (!resumes || resumes.length === 0) {
-      // Default initial mock resume if empty
       resumes = [
         {
           id: "res_primary_default",
@@ -139,13 +147,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.warn("Error loading resumes:", err);
   }
 
-  // 3. Load Portfolio & Inquiries Count
+  // 3. Render Portfolio & Inquiries Count
   try {
-    const portfolios = await getUserPortfolios(user.uid);
+    const portfolios = portfoliosRes.status === "fulfilled" ? portfoliosRes.value : null;
     const count = portfolios?.[0]?.projects?.length || 0;
     if (statProjectsCount) statProjectsCount.textContent = `${count} Projects`;
 
-    const inquiries = await getCandidateInquiries(user.uid);
+    const inquiries = inquiriesRes.status === "fulfilled" ? inquiriesRes.value : null;
     const inqCountEl = document.getElementById("dash-inquiries-count");
     if (inqCountEl) {
       inqCountEl.textContent = `${inquiries?.length || 0} Inquiries`;
@@ -155,9 +163,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   } catch (e) {}
 
-  // 4. Load Quick Career Recommendations
+  // 4. Render Quick Career Recommendations
   try {
-    const recs = await getCareerRecommendations({ uid: user.uid });
+    const recs = recsRes.status === "fulfilled" ? recsRes.value : null;
     if (recs?.careerPaths?.length > 0) {
       quickCareerMatches.innerHTML = recs.careerPaths.slice(0, 3).map((cp) => `
         <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface-elevated); padding:0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">

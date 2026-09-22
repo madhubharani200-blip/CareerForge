@@ -134,9 +134,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loginWithEmail(email, password);
         showToast("Signed in successfully!", "success");
       }
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 400);
+      window.location.replace("dashboard.html");
     } catch (error) {
       let friendlyMsg = error.message || "Authentication failed. Please check your credentials.";
       const code = error.code || "";
@@ -167,9 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       await loginWithGoogle();
       showToast("Google sign-in successful! Welcome.", "success");
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 400);
+      window.location.replace("dashboard.html");
     } catch (error) {
       setButtonLoading(btnGoogleAuth, false);
       const code = error.code || "";
@@ -187,9 +183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       await loginWithEmail("demo.student@careerforge.ai", "DemoPassword123!");
       showToast("Loaded demo student profile!", "success");
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 500);
+      window.location.replace("dashboard.html");
     } catch (err) {
       setButtonLoading(btnDemoLogin, false);
     }

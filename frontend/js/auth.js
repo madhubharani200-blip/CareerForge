@@ -220,7 +220,8 @@ export async function registerWithEmail(email, password, displayName) {
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
     localStorage.setItem("cf_is_new_user", "true");
 
-    await ensureUserProfileDoc(user, { displayName });
+    // Persist to Firestore in background without blocking instant registration
+    ensureUserProfileDoc(user, { displayName }).catch((e) => console.warn("[Auth] Background profile sync:", e));
     return { success: true, user: sessionUser };
   } catch (error) {
     if (isPlaceholderOrNetworkError(error) || !auth) {
@@ -260,7 +261,8 @@ export async function loginWithEmail(email, password) {
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
     localStorage.setItem("cf_is_new_user", "false");
 
-    await ensureUserProfileDoc(user);
+    // Persist to Firestore in background without blocking instant login
+    ensureUserProfileDoc(user).catch((e) => console.warn("[Auth] Background profile sync:", e));
     return { success: true, user: sessionUser };
   } catch (error) {
     if (isPlaceholderOrNetworkError(error) || !auth) {
@@ -274,7 +276,7 @@ export async function loginWithEmail(email, password) {
       localStorage.setItem(SESSION_USER_KEY, JSON.stringify(mockUser));
       localStorage.setItem("cf_is_new_user", "false");
       localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
-      await ensureUserProfileDoc(mockUser);
+      ensureUserProfileDoc(mockUser).catch(() => {});
       return { success: true, user: mockUser, isDemo: true };
     }
     throw error;
@@ -302,7 +304,7 @@ export async function loginWithGoogle() {
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
     localStorage.setItem("cf_is_new_user", "false");
 
-    await ensureUserProfileDoc(user);
+    ensureUserProfileDoc(user).catch((e) => console.warn("[Auth] Background profile sync:", e));
     return { success: true, user: sessionUser };
   } catch (error) {
     const code = (error.code || "").toLowerCase();
@@ -327,7 +329,7 @@ export async function loginWithGoogle() {
       };
       localStorage.setItem(SESSION_USER_KEY, JSON.stringify(googleUser));
       localStorage.setItem("cf_is_new_user", "false");
-      await ensureUserProfileDoc(googleUser);
+      ensureUserProfileDoc(googleUser).catch(() => {});
       return { success: true, user: googleUser, isDemo: true };
     }
     throw error;
