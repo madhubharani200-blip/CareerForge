@@ -26,11 +26,12 @@ if (auth) {
         return;
       }
       if (firebaseUser) {
+        const name = firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "User";
         const u = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Emerging Professional",
-          photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${firebaseUser.uid}`
+          displayName: name,
+          photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`
         };
         localStorage.setItem(SESSION_USER_KEY, JSON.stringify(u));
       }
@@ -47,11 +48,12 @@ export function getCurrentUser() {
   }
 
   if (auth?.currentUser) {
+    const name = auth.currentUser.displayName || auth.currentUser.email?.split("@")[0] || "User";
     const u = {
       uid: auth.currentUser.uid,
       email: auth.currentUser.email,
-      displayName: auth.currentUser.displayName || auth.currentUser.email?.split("@")[0] || "Emerging Professional",
-      photoURL: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${auth.currentUser.uid}`
+      displayName: name,
+      photoURL: auth.currentUser.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`
     };
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(u));
     return u;
@@ -64,13 +66,7 @@ export function getCurrentUser() {
     } catch (e) {}
   }
 
-  const demoJson = localStorage.getItem(DEMO_USER_KEY);
-  if (demoJson) {
-    try {
-      return JSON.parse(demoJson);
-    } catch (e) {}
-  }
-
+  // No demo user fallback — only real authenticated users
   return null;
 }
 
@@ -79,11 +75,12 @@ export function getCurrentUser() {
  */
 export function persistUserSession(user) {
   if (!user) return;
+  const name = user.displayName || user.email?.split("@")[0] || "User";
   const sessionUser = {
     uid: user.uid,
     email: user.email,
-    displayName: user.displayName || user.email?.split("@")[0] || "Emerging Professional",
-    photoURL: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`
+    displayName: name,
+    photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`
   };
   localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
   return sessionUser;
@@ -126,51 +123,31 @@ export async function updateUserSession(updatedData) {
 export async function ensureUserProfileDoc(user, additionalData = {}) {
   if (!user?.uid) return;
 
-  const defaultProfile = {
-    displayName: user.displayName || additionalData.displayName || "Emerging Professional",
+  const name = user.displayName || additionalData.displayName || user.email?.split("@")[0] || "User";
+
+  // Only store the bare minimum to identify the user — never overwrite real profile data
+  const minimalProfile = {
+    displayName: name,
     email: user.email || "",
-    photoURL: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
-    headline: "Aspiring Software Engineer & Problem Solver",
-    targetRole: "Full Stack Software Engineer",
-    experienceLevel: "Entry-Level / Student",
-    education: [
-      {
-        institution: "University of Technology",
-        degree: "B.S. Computer Science",
-        gradYear: "2026",
-        gpa: "3.8"
-      }
-    ],
-    skills: [
-      { name: "JavaScript", level: "Advanced" },
-      { name: "HTML5 / CSS3", level: "Advanced" },
-      { name: "Node.js", level: "Intermediate" },
-      { name: "Git", level: "Intermediate" }
-    ],
-    interests: "Full Stack Web Apps, Cloud Computing, Generative AI Agent Workflows",
-    links: {
-      github: "https://github.com",
-      linkedin: "https://linkedin.com",
-      portfolio: ""
-    },
+    photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
     ...additionalData,
-    createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
 
   try {
     if (db) {
       const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, defaultProfile, { merge: true });
+      // merge:true ensures we NEVER overwrite existing profile data
+      await setDoc(userDocRef, minimalProfile, { merge: true });
     }
   } catch (err) {
     console.warn("[Auth] Firestore doc creation bypassed or offline:", err.message);
   }
 
-  // Also cache in localStorage for fast instant UI hydration
+  // Cache minimal profile in localStorage only if user doesn't have a saved profile yet
   const localProfileKey = `user_profile_${user.uid}`;
   if (!localStorage.getItem(localProfileKey)) {
-    localStorage.setItem(localProfileKey, JSON.stringify(defaultProfile));
+    localStorage.setItem(localProfileKey, JSON.stringify(minimalProfile));
   }
 }
 
@@ -210,34 +187,22 @@ export async function registerWithEmail(email, password, displayName) {
       await updateProfile(user, { displayName });
     }
 
+    const name = displayName || user.email?.split("@")[0] || "User";
     const sessionUser = {
       uid: user.uid,
       email: user.email,
-      displayName: displayName || user.email?.split("@")[0] || "Emerging Professional",
-      photoURL: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
+      displayName: name,
+      photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
       isNewUser: true
     };
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
     localStorage.setItem("cf_is_new_user", "true");
 
     // Persist to Firestore in background without blocking instant registration
-    ensureUserProfileDoc(user, { displayName }).catch((e) => console.warn("[Auth] Background profile sync:", e));
+    ensureUserProfileDoc(user, { displayName: name }).catch((e) => console.warn("[Auth] Background profile sync:", e));
     return { success: true, user: sessionUser };
   } catch (error) {
-    if (isPlaceholderOrNetworkError(error) || !auth) {
-      const mockUser = {
-        uid: "user_" + Math.random().toString(36).substring(2, 9),
-        email,
-        displayName: displayName || email.split("@")[0],
-        photoURL: `https://api.dicebear.com/7.x/bottts/svg?seed=${email}`,
-        isNewUser: true
-      };
-      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(mockUser));
-      localStorage.setItem("cf_is_new_user", "true");
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
-      await ensureUserProfileDoc(mockUser, { displayName: mockUser.displayName });
-      return { success: true, user: mockUser, isDemo: true };
-    }
+    // Do NOT silently create demo users — surface real errors
     throw error;
   }
 }
@@ -251,11 +216,12 @@ export async function loginWithEmail(email, password) {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
+    const name = user.displayName || user.email?.split("@")[0] || "User";
     const sessionUser = {
       uid: user.uid,
       email: user.email,
-      displayName: user.displayName || user.email?.split("@")[0] || "Emerging Professional",
-      photoURL: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
+      displayName: name,
+      photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
       isNewUser: false
     };
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
@@ -265,20 +231,7 @@ export async function loginWithEmail(email, password) {
     ensureUserProfileDoc(user).catch((e) => console.warn("[Auth] Background profile sync:", e));
     return { success: true, user: sessionUser };
   } catch (error) {
-    if (isPlaceholderOrNetworkError(error) || !auth) {
-      const mockUser = {
-        uid: "user_" + Math.random().toString(36).substring(2, 9),
-        email,
-        displayName: email.split("@")[0] || "User",
-        photoURL: `https://api.dicebear.com/7.x/bottts/svg?seed=${email}`,
-        isNewUser: false
-      };
-      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(mockUser));
-      localStorage.setItem("cf_is_new_user", "false");
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
-      ensureUserProfileDoc(mockUser).catch(() => {});
-      return { success: true, user: mockUser, isDemo: true };
-    }
+    // Do NOT silently create demo users — surface real auth errors
     throw error;
   }
 }
@@ -288,50 +241,57 @@ export async function loginWithEmail(email, password) {
  */
 export async function loginWithGoogle() {
   sessionStorage.removeItem("cf_logged_out");
+
+  if (!auth) {
+    throw new Error("Authentication service not available. Please try Email Sign-In.");
+  }
+
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
   try {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
+    const name = user.displayName || user.email?.split("@")[0] || "User";
     const sessionUser = {
       uid: user.uid,
       email: user.email,
-      displayName: user.displayName || user.email?.split("@")[0] || "Emerging Professional",
-      photoURL: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
+      displayName: name,
+      // Google provides real photoURL — use it directly
+      photoURL: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1,3b82f6,06b6d4`,
       isNewUser: false
     };
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionUser));
     localStorage.setItem("cf_is_new_user", "false");
 
+    // Sync profile to Firestore in background (non-blocking)
     ensureUserProfileDoc(user).catch((e) => console.warn("[Auth] Background profile sync:", e));
     return { success: true, user: sessionUser };
   } catch (error) {
-    const code = (error.code || "").toLowerCase();
-    const msg = (error.message || "").toLowerCase();
+    const code = (error.code || "");
 
-    // If popup was blocked, closed, or domain authorization pending, provide seamless sign-in
+    // Popup closed by user — just signal cancellation, do NOT create a fake account
     if (
-      code.includes("popup-closed-by-user") ||
-      code.includes("cancelled-popup-request") ||
-      code.includes("popup-blocked") ||
-      code.includes("unauthorized-domain") ||
-      isPlaceholderOrNetworkError(error) ||
-      !auth
+      code === "auth/popup-closed-by-user" ||
+      code === "auth/cancelled-popup-request"
     ) {
-      console.warn("[Auth] Google Sign-in completed via safe fallback:", error.message);
-      const googleUser = {
-        uid: "google_user_" + Math.random().toString(36).substring(2, 9),
-        email: "google.student@careerforge.ai",
-        displayName: "Google Student User",
-        photoURL: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-        isNewUser: false
-      };
-      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(googleUser));
-      localStorage.setItem("cf_is_new_user", "false");
-      ensureUserProfileDoc(googleUser).catch(() => {});
-      return { success: true, user: googleUser, isDemo: true };
+      const err = new Error("Google sign-in was cancelled. Please try again.");
+      err.code = code;
+      throw err;
     }
+
+    // Popup blocked by browser
+    if (code === "auth/popup-blocked") {
+      throw new Error("Google sign-in popup was blocked by your browser. Please allow popups for this site and try again.");
+    }
+
+    // Domain not authorized in Firebase console
+    if (code === "auth/unauthorized-domain") {
+      throw new Error("This domain is not authorized for Google Sign-In. Please use Email Sign-In instead.");
+    }
+
+    // All other real errors — propagate to UI
     throw error;
   }
 }
@@ -355,11 +315,44 @@ export async function resetPassword(email) {
  * Sign Out
  */
 export async function logOut() {
+  // Get current user UID BEFORE clearing session (needed to wipe user-specific cache)
+  let currentUid = null;
+  try {
+    const sessionJson = localStorage.getItem(SESSION_USER_KEY);
+    if (sessionJson) {
+      const parsed = JSON.parse(sessionJson);
+      currentUid = parsed?.uid;
+    }
+  } catch (e) {}
+
+  // Mark as logged out IMMEDIATELY to prevent any re-login
   sessionStorage.setItem("cf_logged_out", "true");
+
+  // Clear all session and profile data
   localStorage.removeItem(SESSION_USER_KEY);
   localStorage.removeItem(DEMO_USER_KEY);
   localStorage.removeItem("cf_user_profile");
   localStorage.removeItem("cf_is_new_user");
+  localStorage.removeItem("cf_last_saved_portfolio");
+
+  // Clear all user-specific cached data (profile, portfolios, resumes, inquiries)
+  if (currentUid) {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+        key.includes(currentUid) ||
+        key.startsWith("user_profile_") ||
+        key.startsWith("user_portfolios_") ||
+        key.startsWith("user_resumes_") ||
+        key.startsWith("public_portfolio_") ||
+        key.startsWith("contact_inquiries_")
+      )) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  }
 
   if (auth) {
     try {

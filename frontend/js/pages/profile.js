@@ -56,16 +56,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnConfirmDelete = document.getElementById("btn-confirm-delete-data");
 
   // State
-  let skillsList = [
-    { name: "JavaScript", level: "Advanced" },
-    { name: "HTML5 / CSS3", level: "Advanced" },
-    { name: "Node.js", level: "Intermediate" },
-    { name: "Git & GitHub", level: "Intermediate" },
-    { name: "REST APIs", level: "Intermediate" },
-    { name: "Firebase", level: "Intermediate" }
-  ];
+  let skillsList = [];
 
-  let currentAvatarUrl = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
+  let currentAvatarUrl = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.displayName || user.email || "User")}&backgroundColor=6366f1,3b82f6,06b6d4`;
 
   // 1. Load User Profile from LocalStorage / Firestore
   async function loadProfile() {

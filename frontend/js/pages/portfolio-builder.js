@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnUseProfileAvatar = document.getElementById("btn-use-profile-avatar");
   const portPhotoUrl = document.getElementById("port-photo-url");
 
-  let currentPhotoURL = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
+  let currentPhotoURL = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.displayName || user.email || "User")}&backgroundColor=6366f1,3b82f6,06b6d4`;
 
   // Check if profile has a saved picture
   const storedProfile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || localStorage.getItem("cf_user_profile") || "{}");
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btnUseProfileAvatar) {
     btnUseProfileAvatar.addEventListener("click", () => {
       const prof = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || localStorage.getItem("cf_user_profile") || "{}");
-      const avatar = prof.photoURL || user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
+      const avatar = prof.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.displayName || user.email || "User")}&backgroundColor=6366f1,3b82f6,06b6d4`;
       currentPhotoURL = avatar;
       if (portPhotoPreview) portPhotoPreview.src = currentPhotoURL;
       if (portPhotoUrl && !avatar.startsWith("data:")) portPhotoUrl.value = avatar;

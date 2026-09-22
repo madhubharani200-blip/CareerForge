@@ -128,7 +128,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const resolvedEmail = portfolio?.email || cachedProf.email || currentUser?.email || "";
     const resolvedHeadline = portfolio?.heroTitle || cachedProf.headline || "Full Stack Software Engineer";
     const resolvedAbout = portfolio?.aboutMe || "Passionate engineer dedicated to building clean, high-performance web applications and scalable solutions.";
-    const resolvedPhoto = portfolio?.photoURL || cachedProf.photoURL || currentUser?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${targetUid}`;
+    const fallbackInitialsAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(resolvedName)}&backgroundColor=6366f1,3b82f6,06b6d4`;
+    const resolvedPhoto = portfolio?.photoURL || cachedProf.photoURL || currentUser?.photoURL || fallbackInitialsAvatar;
 
     const candidate = {
       displayName: resolvedName,
@@ -170,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (pubAvatar) {
       pubAvatar.src = candidate.photoURL;
       pubAvatar.onerror = () => {
-        pubAvatar.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${targetUid}`;
+        pubAvatar.src = fallbackInitialsAvatar;
       };
     }
 
