@@ -166,13 +166,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     setButtonLoading(btnGoogleAuth, true);
     try {
       await loginWithGoogle();
-      showToast("Google sign-in successful!", "success");
+      showToast("Google sign-in successful! Welcome.", "success");
       setTimeout(() => {
         window.location.href = "dashboard.html";
-      }, 500);
+      }, 400);
     } catch (error) {
-      showAlert(error.message || "Google sign in failed.");
       setButtonLoading(btnGoogleAuth, false);
+      const code = error.code || "";
+      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        showToast("Google sign-in window was closed. Please try again or use Email Sign-In.", "info");
+        return;
+      }
+      showAlert(error.message || "Google sign-in encountered an issue. Please try Email Sign-In.");
     }
   });
 
