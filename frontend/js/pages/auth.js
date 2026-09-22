@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (isLogout) {
     sessionStorage.setItem("cf_logged_out", "true");
     localStorage.removeItem("career_ai_session_user");
-    localStorage.removeItem("career_ai_demo_user");
     localStorage.removeItem("cf_user_profile");
     localStorage.removeItem("cf_is_new_user");
     try {
@@ -79,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       tabLoginBtn.classList.remove("active");
       authTitle.textContent = "Create Account";
       authSubtitle.textContent = "Start your journey with AI-assisted career tools";
-      groupDisplayName.style.display = "flex";
+      groupDisplayName.style.display = "block";
       inputDisplayName.required = true;
       btnAuthSubmit.querySelector("span").textContent = "Create Account";
     } else {
@@ -134,14 +133,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loginWithEmail(email, password);
         showToast("Signed in successfully!", "success");
       }
-      window.location.replace("dashboard.html");
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 200);
     } catch (error) {
+      setButtonLoading(btnAuthSubmit, false);
       let friendlyMsg = error.message || "Authentication failed. Please check your credentials.";
       const code = error.code || "";
 
       if (code === "auth/invalid-credential" || code === "auth/user-not-found" || code === "auth/wrong-password") {
         if (!isSignUp) {
-          friendlyMsg = "Account not found or password incorrect. If this is your first time, please click the 'Create Account' tab above to register first!";
+          friendlyMsg = "Incorrect password or account credentials. Please check your details or create an account.";
         } else {
           friendlyMsg = "Invalid email or credentials. Please check your details.";
         }
@@ -154,7 +156,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       showAlert(friendlyMsg);
-      setButtonLoading(btnAuthSubmit, false);
     }
   });
 
@@ -165,7 +166,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       await loginWithGoogle();
       showToast("Google sign-in successful! Welcome.", "success");
-      window.location.replace("dashboard.html");
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 200);
     } catch (error) {
       setButtonLoading(btnGoogleAuth, false);
       const code = error.code || "";
@@ -183,7 +186,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       await loginWithEmail("demo.student@careerforge.ai", "DemoPassword123!");
       showToast("Loaded demo student profile!", "success");
-      window.location.replace("dashboard.html");
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 200);
     } catch (err) {
       setButtonLoading(btnDemoLogin, false);
     }
