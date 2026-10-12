@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/responsive.css">
+  <script type="module" src="js/theme.js"></script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
 </head>
 <body>
@@ -34,6 +35,23 @@
     </ul>
 
     <div class="nav-actions" id="front-nav-actions">
+      <!-- Theme Toggle Button -->
+      <button class="theme-toggle-btn" id="btn-theme-toggle" aria-label="Toggle theme" title="Switch Light / Dark Theme">
+        <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
       <a href="pages/auth.html" class="btn btn-secondary btn-sm" id="nav-login-btn">Sign In</a>
       <a href="pages/auth.html?mode=signup" class="btn btn-primary btn-sm" id="nav-signup-btn">Get Started Free</a>
     </div>
@@ -258,6 +276,7 @@
   <script type="module">
     import { onAuthChanged, getCurrentUser, logOut } from "./js/auth.js";
     import { escapeHtml } from "./js/ui-utils.js";
+    import { initTheme } from "./js/theme.js";
     
     function resolveUserData(user) {
       if (!user) return { displayName: "User", photoURL: "" };
@@ -294,6 +313,22 @@
         // 1. Render Profile Picture and User Menu in Top Navbar
         if (frontNavActions) {
           frontNavActions.innerHTML = `
+            <button class="theme-toggle-btn" id="btn-theme-toggle" aria-label="Toggle theme" title="Switch Light / Dark Theme">
+              <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </button>
             <a href="pages/dashboard.html" class="btn btn-secondary btn-sm">Dashboard</a>
             <div class="user-dropdown">
               <button class="user-avatar-btn" id="btn-front-user-dropdown" style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-glass); border-radius: var(--radius-full); padding: 0.25rem 0.75rem 0.25rem 0.35rem; cursor: pointer;">
@@ -330,6 +365,8 @@
               </div>
             </div>
           `;
+
+          initTheme();
 
           // Dropdown toggle listener
           const frontDropdownToggle = document.getElementById("btn-front-user-dropdown");
@@ -381,6 +418,7 @@
       }
     }
 
+    initTheme();
     const initialUser = getCurrentUser();
     if (initialUser) updateAuthState(initialUser);
     onAuthChanged((user) => updateAuthState(user));
